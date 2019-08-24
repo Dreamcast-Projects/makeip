@@ -1,3 +1,5 @@
+#include "iptmpl.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -77,7 +79,7 @@ int parse_input(FILE *fh, char *ip)
   int i;
 
   memset(filled_in, 0, sizeof(filled_in));
-  
+
   while(fgets(buf, sizeof(buf), fh)) {
     char *p;
     trim(buf);
@@ -154,23 +156,9 @@ void update_crc(char *ip)
   }
 }
 
-void makeip(char *ip_tmpl, char *in, char *out)
+void makeip(char *in, char *out)
 {
-  static char ip[0x8000];
-
-  FILE *fh = fopen(ip_tmpl, "rb");
-  if(fh == NULL) {
-    fprintf(stderr, "Can't open \"%s\".\n", ip_tmpl);
-    exit(1);
-  }
-
-  if(fread(ip, 1, 0x8000, fh) != 0x8000) {
-    fprintf(stderr, "Read error.\n");
-    exit(1);
-  }
-  fclose(fh);
-
-  fh = fopen(in, "r");
+  FILE *fh = fopen(in, "r");
   if(fh == NULL) {
     fprintf(stderr, "Can't open \"%s\".\n", in);
     exit(1);
@@ -205,11 +193,7 @@ int main(int argc, char *argv[])
     exit(1);
   }
 
-  ip_tmpl = getenv("IP_TEMPLATE_FILE");
-  if(ip_tmpl == NULL)
-    ip_tmpl = "IP.TMPL";
-
-  makeip(ip_tmpl, argv[1], argv[2]);
+  makeip(argv[1], argv[2]);
 
   return 0;
 }
