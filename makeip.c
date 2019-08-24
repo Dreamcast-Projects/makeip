@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-
 #define NUM_FIELDS 11
 
 struct field;
@@ -33,36 +32,43 @@ int filled_in[NUM_FIELDS];
 int check_areasym(char *ptr, struct field *f)
 {
   int i, a = 0;
-  for(i=0; i<f->len; i++)
+  for(i=0; i<f->len; i++) {
     switch(ptr[i]) {
-     case 'J':
-       a |= (1<<0);
-       break;
-     case 'U':
-       a |= (1<<1);
-       break;
-     case 'E':
-       a |= (1<<2);
-       break;
-     case ' ':
-       break;
-     default:
-       fprintf(stderr, "Unknown area symbol '%c'.\n", ptr[i]);
-       return 0;
+      case 'J':
+        a |= (1<<0);
+        break;
+      case 'U':
+        a |= (1<<1);
+        break;
+      case 'E':
+        a |= (1<<2);
+        break;
+      case ' ':
+        break;
+      default:
+        fprintf(stderr, "Unknown area symbol '%c'.\n", ptr[i]);
+        return 0;
     }
-  for(i=0; i<f->len; i++)
+  }
+
+  for(i=0; i<f->len; i++) {
     if((a & (1<<i)) == 0)
       ptr[i] = ' ';
     else
       ptr[i] = "JUE"[i];
+  }
+
   return 1;
 }
 
 void trim(char *str)
 {
   int l = strlen(str);
-  while(l>0 && (str[l-1] == '\r' || str[l-1] == '\n' ||
-		str[l-1] == ' ' || str[l-1] == '\t'))
+  while(l > 0 && 
+       (str[l-1] == '\r' || 
+        str[l-1] == '\n' ||
+        str[l-1] == ' ' || 
+        str[l-1] == '\t'))
     str[--l]='\0';
 }
 
@@ -71,27 +77,34 @@ int parse_input(FILE *fh, char *ip)
   static char buf[80];
   int i;
   memset(filled_in, 0, sizeof(filled_in));
+
   while(fgets(buf, sizeof(buf), fh)) {
     char *p;
     trim(buf);
     if(*buf)
       if((p = strchr(buf, ':'))) {
-	*p++ = '\0';
-	trim(buf);
-	for(i=0; i<NUM_FIELDS; i++)
-	  if(!strcmp(buf, fields[i].name))
-	    break;
-	if(i>=NUM_FIELDS) {
-	  fprintf(stderr, "Unknown field \"%s\".\n", buf);
-	  return 0;
-	}
-	memset(ip+fields[i].pos, ' ', fields[i].len);
-	while(*p == ' ' || *p == '\t')
-	  p++;
-	if(strlen(p)>fields[i].len) {
-	  fprintf(stderr, "Data for field \"%s\" is too long.\n", fields[i]);
-	  return 0;
-	}
+	      *p++ = '\0';
+	      trim(buf);
+
+	      for(i=0; i<NUM_FIELDS; i++) {
+	        if(!strcmp(buf, fields[i].name))
+	          break;
+        }
+
+        if(i >= NUM_FIELDS) {
+          fprintf(stderr, "Unknown field \"%s\".\n", buf);
+          return 0;
+        }
+
+        memset(ip+fields[i].pos, ' ', fields[i].len);
+        while(*p == ' ' || *p == '\t')
+	        p++;
+
+        if(strlen(p)>fields[i].len) {
+          fprintf(stderr, "Data for field \"%s\" is too long.\n", fields[i].name);
+          return 0;
+        }
+        
 	memcpy(ip+fields[i].pos, p, strlen(p));
 	if(fields[i].extra_check!=NULL &&
 	   !(*fields[i].extra_check)(ip+fields[i].pos, &fields[i]))
@@ -105,7 +118,7 @@ int parse_input(FILE *fh, char *ip)
 
   for(i=0; i<NUM_FIELDS; i++)
     if(!filled_in[i]) {
-      fprintf(stderr, "Missing value for \"%s\".\n", fields[i]);
+      fprintf(stderr, "Missing value for \"%s\".\n", fields[i].name);
       return 0;
     }
       
