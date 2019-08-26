@@ -124,6 +124,7 @@ int insert_mr(char *ip, char *mrfn)
   fread(mr_data, mr_size, 1, mr);
 
   memcpy(ip+0x3820, mr_data, mr_size);
+  free(mr_data);
 
   return 0;
 }
