@@ -290,7 +290,7 @@ void usage(void)
     printf("\t-d <releasedate>  Release date (format: YYYYMMDD, default: 20000627)\n");
     printf("\t-g <gametitle>    Name of the software (default: GAMETITLE)\n");
     printf("\t-h                Usage information (you\'re looking at it)\n");
-    printf("\t-i <mrimagefile>  Insert a mr image into the IP.BIN\n");
+    printf("\t-i <mrfilename>   Insert a mr image into the IP.BIN\n");
     printf("\t-v <version>      Product version (default: V1.000)\n\n");
 }
 
