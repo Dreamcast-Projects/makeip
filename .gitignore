@@ -1,3 +1,4 @@
 *.o
+*.mr
 makeip
 IP.BIN
