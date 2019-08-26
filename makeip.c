@@ -346,12 +346,12 @@ int main(int argc, char *argv[])
   if(parsed_options == 0 && argc == 3) {
     makeip(argv[1], argv[2]);
   } 
-  else if((parsed_options > 0 && argc >= 3) ||
+  else if((parsed_options > 0 && argc > 3) ||
           (parsed_options == 0 && argc == 2)){
     makeip_with_options(mr_file, argv[argc-1]);
   }
   else {
-    fprintf(stderr, "Something went wrong");
+    fprintf(stderr, "Something went wrong. You're probably missing an argument for an option.\n");
   }
 
   return 0;
