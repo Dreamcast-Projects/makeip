@@ -1,25 +1,25 @@
-#!/usr/bin/python
+#!/usr/bin/env python
  
 from gimpfu import *
  
-def plugin_main(img, drawable):
+def plugin_main(timg, tdrawable):
     print "Hello, world!"
  
 register(
-        "python_fu_mr_export",
-        "Export the image in MR format to insert into IP.BIN",
-        "Export the image in MR format to insert into IP.BIN",
+        "python_fu_mrexport",
+        "Export the image in MR format so it can be inserted into a IP.BIN",
+        "Export the image in MR format so it can be inserted into a IP.BIN",
         "BBHoodsta",
         "BBHoodsta",
         "2019",
         "Export As MR",
-        "RGB*, GRAY*",
+        "*",
         [
             (PF_IMAGE, "image", "Input image", None),
             (PF_DRAWABLE, "drawable", "Input drawable", None),
         ],
         [],
         plugin_main,
-        menu = "<Image>/File/Save/")
+        menu = "<Image>/File/Export")
  
 main()
