@@ -135,8 +135,8 @@ def save_mr(img, drawable, filename, raw_filename):
         gimp.message("This will NOT fit in a normal ip.bin - it is %d bytes too big!\n", compressed_size - 8192)
     
     crap = 0
-    offset = 2 + 7*4 + palette_count*4;
-    size = offset + compressed_size;
+    offset = 2 + 7*4 + palette_count*4
+    size = offset + compressed_size
 
     with open(filename, 'wb') as output:
         output.write("MR")                                  # fwrite("MR", 1, 2, output);
@@ -149,17 +149,18 @@ def save_mr(img, drawable, filename, raw_filename):
         output.write(to_bytes(palette_count, 4, 'little'))  # fwrite(colors, 1, 4, output);
 
         for i in range(palette_count):
-            # print palette_colors[i*3:i*3+3]
-            t = output.write(palette_colors[i*3:i*3+3])
-            print str(t)
+            palette_color = palette_colors[i*3:i*3+3]
+            for x in reversed(range(3)):
+                output.write(to_bytes(palette_color[x], 1, 'little'))
             # output.write(to_bytes(size, 1, 'little'))       # fwrite(&palette.color[i].b, 1, 1, output);
             # output.write(to_bytes(size, 1, 'little'))       # fwrite(&palette.color[i].g, 1, 1, output);
             # output.write(to_bytes(size, 1, 'little'))       # fwrite(&palette.color[i].r, 1, 1, output);
 
             output.write(to_bytes(crap, 1, 'little'))       # fwrite(&crap, 1, 1, output);
 
-        print compressed_output[0:compressed_size]
-        output.write(compressed_output[0:compressed_size]) # fwrite(compressed_output, compressed_size, 1, output);
+        # print(compressed_output[0:compressed_size])
+        for i in range(compressed_size):
+            output.write(to_bytes(compressed_output[x], 1, 'little'))
         
 def load_mr(filename, raw_filename):
     print "Hello, world!"
