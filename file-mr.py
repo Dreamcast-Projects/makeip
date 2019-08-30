@@ -40,11 +40,8 @@ def mrcompress(input, output, size):
     while (position < size):
         run = 1
 
-        while((position+run < size) and (input[position] == input[position+run]) and (run < 0x17f)):
+        while((run < 0x17f) and (position+run < size) and (input[position] == input[position+run])):
             run += 1
-        
-        print("Run: " + str(run))
-        print("Position: " + str(position))
 
         if(run > 0xff):
             output[length] = 0x82
@@ -82,8 +79,6 @@ def save_mr(img, drawable, filename, raw_filename):
         gimp.message("Your image should be 320x90 or smaller\n")
         return
 
-    print("W: " + str(src_width) + " - H: " + str(src_height))
-
     # Grab region of pixels
     src_rgn = drawable.get_pixel_rgn(0, 0, src_width, src_height, False, False)
 
@@ -91,24 +86,21 @@ def save_mr(img, drawable, filename, raw_filename):
     src_pixels = array("B", src_rgn[0:src_width, 0:src_height])
 
     # Allocate raw and compressed outputs
-    raw_output = array("B", "\x00" * (src_width * src_height ))       # raw_output = (char *)malloc(image.width * image.height);
-    compressed_output = array("B", "\x00" * (src_width * src_height)) # compressed_output = (char *)malloc(image.width * image.height);
+    raw_output = array("B", "\x00" * (src_width * src_height )) 
+    compressed_output = array("B", "\x00" * (src_width * src_height))
 
     psize = len(src_rgn[0,0])
-    print (str(psize))
     palette_count = 0
     palette_colors = array("B", "\x00" * (128 * 3)) # 128 colors (RGB)
 
-    print("-------------------")
-
-    # Generate raw_output and count the palette of the image
+    # Generate raw_output and create the palette of the image
     for i in range(src_width*src_height):
         found = False
         palette_index = 0
 
         pixel_index = i * psize
         while(not found and palette_index < palette_count):
-            if(src_pixels[pixel_index:pixel_index+psize] == palette_colors[palette_index:palette_index+psize]): # !memcmp(&data[i], &palette.color[c], 3)
+            if(src_pixels[pixel_index:pixel_index+psize] == palette_colors[palette_index*3:palette_index*3+psize]):
                 found = True
             else:
                 palette_index += 1
@@ -119,49 +111,42 @@ def save_mr(img, drawable, filename, raw_filename):
             return
         
         if(not found):
-            palette_colors[palette_index:palette_index+psize] = src_pixels[pixel_index:pixel_index+psize] # memcpy(palette_colors[palette_index], color, 3);
-            palette_count += 1;
+            palette_colors[palette_index*3:palette_index*3+psize] = src_pixels[pixel_index:pixel_index+psize]
+            palette_count += 1
         
-        raw_output[i] = palette_index;
-
-    print("Found " + str(palette_count) + " colors")
+        raw_output[i] = palette_index
 
     compressed_size = mrcompress(raw_output, compressed_output, src_width*src_height)
-
-    print("Compressing " + str(src_width*src_height) + " bytes to " + str(compressed_size) + " bytes.\n");
 
     # Display warning if compressed image is bigger than 8192 bytes
     if compressed_size > 8192:
         gimp.message("This will NOT fit in a normal ip.bin - it is %d bytes too big!\n", compressed_size - 8192)
     
     crap = 0
-    offset = 2 + 7*4 + palette_count*4
+    endianness = 'litte'
+    offset = 30 + palette_count*4 # 30 byte header
     size = offset + compressed_size
 
     with open(filename, 'wb') as output:
-        output.write("MR")                                  # fwrite("MR", 1, 2, output);
-        output.write(to_bytes(size, 4, 'little'))           # fwrite(&mr.size, 1, 4, output);
-        output.write(to_bytes(crap, 4, 'little'))           # fwrite(&mr.crap, 1, 4, output);
-        output.write(to_bytes(offset, 4, 'little'))         # fwrite(&mr.offset, 1, 4, output);
-        output.write(to_bytes(src_width, 4, 'little'))      # fwrite(&mr.width, 1, 4, output);
-        output.write(to_bytes(src_height, 4, 'little'))     # fwrite(height, 1, 4, output);
-        output.write(to_bytes(crap, 4, 'little'))           # fwrite(&crap, 1, 4, output);
-        output.write(to_bytes(palette_count, 4, 'little'))  # fwrite(colors, 1, 4, output);
+        output.write("MR")                                    # 
+        output.write(to_bytes(size, 4, endianness))           # Filesize
+        output.write(to_bytes(crap, 4, endianness))           # 
+        output.write(to_bytes(offset, 4, endianness))         # Data offset
+        output.write(to_bytes(src_width, 4, endianness))      # Image width
+        output.write(to_bytes(src_height, 4, endianness))     # Image height
+        output.write(to_bytes(crap, 4, endianness))           # 
+        output.write(to_bytes(palette_count, 4, endianness))  # Amount of colors in palette
 
         for i in range(palette_count):
             palette_color = palette_colors[i*3:i*3+3]
+            # Write RGB values in reverse => BGR
             for x in reversed(range(3)):
-                output.write(to_bytes(palette_color[x], 1, 'little'))
-            # output.write(to_bytes(size, 1, 'little'))       # fwrite(&palette.color[i].b, 1, 1, output);
-            # output.write(to_bytes(size, 1, 'little'))       # fwrite(&palette.color[i].g, 1, 1, output);
-            # output.write(to_bytes(size, 1, 'little'))       # fwrite(&palette.color[i].r, 1, 1, output);
+                output.write(to_bytes(palette_color[x], 1, endianness))
+            output.write(to_bytes(crap, 1, endianness)) # Unused alpha
 
-            output.write(to_bytes(crap, 1, 'little'))       # fwrite(&crap, 1, 1, output);
-
-        # print(compressed_output[0:compressed_size])
         for i in range(compressed_size):
-            output.write(to_bytes(compressed_output[x], 1, 'little'))
-        
+            output.write(to_bytes(compressed_output[i], 1, endianness))
+
 def load_mr(filename, raw_filename):
     print "Hello, world!"
 
