@@ -55,7 +55,7 @@ Using this plugin, you can load and save .mr files that you've created in GIMP.
 
 1. **320x90** or less
 2. Less than **128** colors
-3. Must be less than **8192** bytes to fit in a IP.BIN
+3. Less than **8192** bytes to fit in a IP.BIN
 4. The transparent color is **#c0c0c0**, or 192, 192, 192 in RGB.
 
 ## Acknowledgments
