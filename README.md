@@ -7,6 +7,8 @@ generate an IP.BIN and we no longer depend on the IP.TMPL file. Its also backwar
 you can still use the ip.txt if you choose. Another enhancement is MR Image insertion into the 
 IP.BIN. This image is shown during the boot screen. For example:
 
+![alt text](img/mdlogo.png "Example")
+
 
 Included in this repo is a plugin you can use to create .mr images in GIMP. **Make sure to read the MR Image Restrictions restrictions**
 
