@@ -10,7 +10,7 @@ IP.BIN. This image is shown during the boot screen. For example:
 ![alt text](img/mdlogo.png "Example")
 
 
-Included in this repo is a plugin you can use to create .mr images in GIMP. **Make sure to read the MR Image Restrictions restrictions**
+Included in this repo is a plugin(file-mr.py) you can use to create .mr images in GIMP. **Make sure to read the MR Image Restrictions restrictions**
 
 ## Building
 
