@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 # GIMP Plug-in for the Sega Dreamcast MR file format
-# Copyright (C) 2019 by BBHodsta
+# Copyright (C) 2019 by BBHoodsta
 #
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -25,19 +25,19 @@ from gimpfu import *
 from array import array
 
 def to_bytes(n, length, endianess='big'):
-    if sys.version_info[0] < 3:
+    if(sys.version_info[0] < 3):
         h = '%x' % n
         s = ('0'*(len(h) % 2) + h).zfill(length*2).decode('hex')
         return s if endianess == 'big' else s[::-1]
     else:
         return n.to_bytes(length, byteorder=endianess)
 
-def mrcompress(input, output, size):
+def mr_encode(input, output, size):
     length = 0
     position = 0
     run = 0
     
-    while (position < size):
+    while(position < size):
         run = 1
 
         while((run < 0x17f) and (position+run < size) and (input[position] == input[position+run])):
@@ -75,7 +75,7 @@ def save_mr(img, drawable, filename, raw_filename):
     src_height = img.height # image height
 
     # Display error if image is bigger than 320x90
-    if src_width > 320 or src_height > 90:
+    if(src_width > 320 or src_height > 90):
         gimp.message("Your image should be 320x90 or smaller\n")
         return
 
@@ -89,7 +89,7 @@ def save_mr(img, drawable, filename, raw_filename):
     raw_output = array("B", "\x00" * (src_width * src_height )) 
     compressed_output = array("B", "\x00" * (src_width * src_height))
 
-    psize = len(src_rgn[0,0])
+    psize = len(src_rgn[0,0]) # Should be 3
     palette_count = 0
     palette_colors = array("B", "\x00" * (128 * 3)) # 128 colors (RGB)
 
@@ -116,14 +116,14 @@ def save_mr(img, drawable, filename, raw_filename):
         
         raw_output[i] = palette_index
 
-    compressed_size = mrcompress(raw_output, compressed_output, src_width*src_height)
+    compressed_size = mr_encode(raw_output, compressed_output, src_width*src_height)
 
     # Display warning if compressed image is bigger than 8192 bytes
-    if compressed_size > 8192:
+    if(compressed_size > 8192):
         gimp.message("This will NOT fit in a normal ip.bin - it is %d bytes too big!\n", compressed_size - 8192)
     
     crap = 0
-    endianness = 'litte'
+    endianness = 'little'
     offset = 30 + palette_count*4 # 30 byte header
     size = offset + compressed_size
 
@@ -136,10 +136,11 @@ def save_mr(img, drawable, filename, raw_filename):
         output.write(to_bytes(src_height, 4, endianness))     # Image height
         output.write(to_bytes(crap, 4, endianness))           # 
         output.write(to_bytes(palette_count, 4, endianness))  # Amount of colors in palette
+        #output.write(struct.pack("<iiiiiii", size, crap, offset, src_width, src_height, crap, palette_count))
 
         for i in range(palette_count):
             palette_color = palette_colors[i*3:i*3+3]
-            # Write RGB values in reverse => BGR
+            # Write RGB => BGR
             for x in reversed(range(3)):
                 output.write(to_bytes(palette_color[x], 1, endianness))
             output.write(to_bytes(crap, 1, endianness)) # Unused alpha
@@ -147,43 +148,102 @@ def save_mr(img, drawable, filename, raw_filename):
         for i in range(compressed_size):
             output.write(to_bytes(compressed_output[i], 1, endianness))
 
+def mr_decode(input, cdata_size, idata_size):
+    position = 0
+    idx_position = 0
+    run = 0
+    indexed_data = array("B", "\x00" * idata_size)
+
+    while(position < cdata_size):
+        first_byte = input[position]
+        if((position+1) < cdata_size):
+            second_byte = input[position+1]
+
+        # The bytes lower than 0x80 are recopied just as they are in the Bitmap
+        if(first_byte < 0x80):
+            run = 1
+            position += 1
+        # The tag 0x81 is followed by a byte giving directly the count of points
+        elif(first_byte == 0x81):
+            run = second_byte
+            first_byte = input[position+2]
+            position += 3
+        # The tag 0x82 is followed by the number of the points decoded in Run
+        # By retaining only the first byte for each point
+        elif(first_byte == 0x82 and second_byte >= 0x80):
+            run = second_byte - 0x80 + 0x100
+            first_byte = input[position+2]
+            position += 3
+        else:
+            run = first_byte - 0x80
+            first_byte = second_byte
+            position += 2
+
+        # Writing decompressed bytes
+        for i in range(run):
+            # The additional byte (+ 1) is useless, but it always present in MR files.
+            if(idx_position+i < idata_size):
+                indexed_data[idx_position+i] = first_byte
+                
+        idx_position += run
+
+    return indexed_data
+
 def load_mr(filename, raw_filename):
-    print "Hello, world!"
+    opacity = 100
+    file_content = ""
 
-def thumbnail_mr(filename, thumb_size):
-    # FIXME: Untested. Does not seem to be used at all? should be run
-    # when registered and there is no thumbnail in cache
+    print "-------------------"
 
-    print "Hello, world!"
+    # Get content of file
+    with open(filename, 'rb') as input:
+        file_content = input.read()
+
+    # Parse header
+    header_blob = struct.unpack("<iiiiiii", file_content[2:30]) # Grab header ignoring 'MR'
+    filesize = header_blob[0]
+    dataoffset = header_blob[2]
+    img_width = header_blob[3]
+    img_height = header_blob[4]
+    num_colors = header_blob[6]
+
+    # Parse Palette
+    rgb_palette = array("B", "\x00" * (num_colors*3))
+    bgra_palette = struct.unpack("<" + ("B"*(num_colors*4)), file_content[30:30+num_colors*4])
+    for i in range(num_colors):
+        # Convert BGRA => RGB
+        for x in reversed(range(3)):
+            rgb_palette[i*3+(2-x)] = bgra_palette[i*3+x+i]
+
+    # Decode indexed data
+    cdata_size = filesize - dataoffset
+    compressed_data = struct.unpack("<" + ("B" * cdata_size), file_content[dataoffset:dataoffset + cdata_size])
+    print len(compressed_data)
+    indexed_data = mr_decode(compressed_data, cdata_size, img_width * img_height)
+
+    # Indexed data => RGB data
+    rgb_data = array("B", "\x00" * (img_width * img_height * 3))
+    for i in range(img_width * img_height):
+        index = indexed_data[i]
+        rgb_data[i*3:i*3+3] = rgb_palette[index*3:index*3+3]
+
+    # Create image
+    img = gimp.Image(img_width, img_height, RGB)
+    img.filename = filename
+    img_layer = gimp.Layer(img, filename, img_width, img_height, RGB_IMAGE, opacity, NORMAL_MODE)
+    img_layer_region = img_layer.get_pixel_rgn(0, 0, img_width, img_height, True)
+    img_layer_region[0:img_width, 0:img_height] = rgb_data.tostring()
+    img.add_layer(img_layer, 0)
+    gimp.displays_flush()
+
+    return img
 
 def register_load_handlers():
     gimp.register_load_handler('file-mr-load', 'mr', '')
     pdb['gimp-register-file-handler-mime']('file-mr-load', 'image/mr')
-    pdb['gimp-register-thumbnail-loader']('file-mr-load', 'file-mr-load-thumb')
 
 def register_save_handlers():
     gimp.register_save_handler('file-mr-save', 'mr', '')
-
-register(
-    'file-mr-load-thumb', #name
-    'Load an MR (.mr) file', #description
-    'Load an MR (.mr) file',
-    'BBHoodsta', #author
-    'BBHoodsta', #copyright
-    '2019', #year
-    None,
-    None, #image type
-    [   #input args. Format (type, name, description, default [, extra])
-        (PF_STRING, 'filename', 'The name of the file to load', None),
-        (PF_INT, 'thumb-size', 'Preferred thumbnail size', None),
-    ],
-    [   #results. Format (type, name, description)
-        (PF_IMAGE, 'image', 'Thumbnail image'),
-        (PF_INT, 'image-width', 'Width of full-sized image'),
-        (PF_INT, 'image-height', 'Height of full-sized image')
-    ],
-    thumbnail_mr, #callback
-)
 
 register(
     'file-mr-save', #name
