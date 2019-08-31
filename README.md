@@ -39,8 +39,8 @@ Options:
 
 GIMP is a cross-platform image editor available for GNU/Linux, OS X, Windows [https://www.gimp.org/]
 
-Using this plugin, you can load and save .mr files that you've created in GIMP. It was only tested on the latest
-Gimp 2.10 but I believe it would also work for Gimp 2.8.
+Using this plugin, you can load and save .mr files that you've created in GIMP. Verified to work in GIMP 2.10
+and GIMP 2.8
 
 **Installing:**
 
