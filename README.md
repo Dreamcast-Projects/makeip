@@ -20,7 +20,7 @@ Unix: ```cc makeip.c```
 
 Windows: ```cl makeip.c```
 
-## Usuage
+## Usage
 ```
 makeip [options] IP.BIN
 makeip ip.txt IP.BIN
@@ -39,7 +39,8 @@ Options:
 
 GIMP is a cross-platform image editor available for GNU/Linux, OS X, Windows [https://www.gimp.org/]
 
-Using this plugin, you can load and save .mr files that you've created in GIMP.
+Using this plugin, you can load and save .mr files that you've created in GIMP. It was only tested on the latest
+Gimp 2.10 but I believe it would also work for Gimp 2.8.
 
 **Installing:**
 
