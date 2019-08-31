@@ -16,8 +16,10 @@
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Based on logotools(pngtomr.c) source code by Andrew Kieschnick
+# Encoding based on logotools(pngtomr.c) source code by Andrew Kieschnick
 # http://napalm-x.thegypsy.com/andrewk/dc/
+# Decoding based on sbinducer(mrimage.pass) source code by SiZiOUS 
+# http://sbibuilder.shorturl.com/
 
 import os, sys, struct
 
@@ -184,7 +186,7 @@ def mr_decode(input, cdata_size, idata_size):
             # The additional byte (+ 1) is useless, but it always present in MR files.
             if(idx_position+i < idata_size):
                 indexed_data[idx_position+i] = first_byte
-                
+
         idx_position += run
 
     return indexed_data
@@ -192,8 +194,6 @@ def mr_decode(input, cdata_size, idata_size):
 def load_mr(filename, raw_filename):
     opacity = 100
     file_content = ""
-
-    print "-------------------"
 
     # Get content of file
     with open(filename, 'rb') as input:
@@ -218,7 +218,6 @@ def load_mr(filename, raw_filename):
     # Decode indexed data
     cdata_size = filesize - dataoffset
     compressed_data = struct.unpack("<" + ("B" * cdata_size), file_content[dataoffset:dataoffset + cdata_size])
-    print len(compressed_data)
     indexed_data = mr_decode(compressed_data, cdata_size, img_width * img_height)
 
     # Indexed data => RGB data
