@@ -66,4 +66,4 @@ Using this plugin, you can load and save .mr files that you've created in GIMP.
 
 ## License
 
-This project is licensed under the BSD-2 License - see the [LICENSE.md](LICENSE.md) file for details
+This project is licensed under the BSD 2-clause "Simplified" License - see the [LICENSE.md](LICENSE.md) file for details
