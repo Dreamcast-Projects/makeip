@@ -26,7 +26,7 @@ makeip [options] IP.BIN
 makeip ip.txt IP.BIN
     
 Options:
-    -b <bootfilename> Boot filename (default: 1ST_READ.BIN)\n
+    -b <bootfilename> Boot filename (default: 1ST_READ.BIN)
     -c <companyname>  Company name (default: COMPANY)
     -d <releasedate>  Release date (format: YYYYMMDD, default: 20000627)
     -g <gametitle>    Name of the software (default: GAMETITLE)
