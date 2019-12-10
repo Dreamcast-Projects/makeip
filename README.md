@@ -55,7 +55,7 @@ and **GIMP 2.8**
 **Image must be:**
 
 1. **320x90** or less
-2. Less than **128** colors
+2. Max **128** colors
 3. Less than **8192** bytes to fit in a IP.BIN
 4. The transparent color is **#c0c0c0**, or 192, 192, 192 in RGB
 
