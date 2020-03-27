@@ -1,17 +1,21 @@
 BSD 2-Clause License
 
-Copyright (c) 2019, Andress Antonio Barajas
+Copyright (C) 2000, 2001, 2002, 2019, 2020 KallistiOS Team and contributors.
 All rights reserved.
+
+This code was contributed to KallistiOS by Andress Antonio Barajas (BBHoodsta).
+It was originally made by Marcus Comstedt (zeldin). Some portions were made by
+Andrew Kieschnick (ADK/Napalm). Heavily updated by SiZiOUS. Bootstrap 
+replacement (IP.TMPL) was made by Jacob Alberty (LiENUS).
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
 
-* Redistributions of source code must retain the above copyright notice, this
-  list of conditions and the following disclaimer.
-
-* Redistributions in binary form must reproduce the above copyright notice,
-  this list of conditions and the following disclaimer in the documentation
-  and/or other materials provided with the distribution.
+1. Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE

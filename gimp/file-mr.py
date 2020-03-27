@@ -3,10 +3,11 @@
 # GIMP Plug-in for the Sega Dreamcast MR file format
 # Copyright (C) 2019 by BBHoodsta
 #
-# Encoding based on logotools(pngtomr.c) source code by Andrew Kieschnick
+# Encoding based on logotools(pngtomr.c) source code by Andrew Kieschnick (ADK)
 # http://napalm-x.thegypsy.com/andrewk/dc/
-# Decoding based on sbinducer(mrimage.pass) source code by SiZiOUS 
-# http://sbibuilder.shorturl.com/
+#
+# Decoding based on Selfboot Inducer (mrimage.pas) source code by SiZiOUS 
+# http://sizious.com/
 
 import os, sys, struct
 
@@ -109,7 +110,7 @@ def save_mr(img, drawable, filename, raw_filename):
 
     # Display warning if compressed image is bigger than 8192 bytes
     if(compressed_size > 8192):
-        gimp.message("This will NOT fit in a normal ip.bin - it is %d bytes too big!\n", compressed_size - 8192)
+        gimp.message("WARNING: This will NOT fit in a normal ip.bin - it is %d bytes too big!\n", compressed_size - 8192)
     
     crap = 0
     endianness = 'little'
