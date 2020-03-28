@@ -45,41 +45,57 @@
 #include "mr.h"
 #include "field.h"
 
-char *mr_file = NULL;
+// Output IP.BIN filename
+char *g_filename_out = NULL;
 
-char *in_file = NULL;
-char *out_file = NULL;
+// MR image file (if any)
+char *g_filename_mr = NULL;
 
-char ip_data[INITIAL_PROGRAM_SIZE];
+// ip.txt file (if any)
+char *g_filename_in = NULL;
 
-int real_argc = 0;
-VECTOR_DECLARE(real_argv);
+// data that will be written to the IP.BIN output file
+char g_ip_data[INITIAL_PROGRAM_SIZE];
+
+// command-line arguments not parsed by getopt
+int g_real_argc = 0;
+VECTOR_DECLARE(g_real_argv);
+
+// options handled by makeip
+#define OPTIONS "a:b:c:d:e:fg:hi:n:l:p:t:v"
+char *g_parameterized_options;
 
 void
 app_finalize(void)
 {
   field_finalize();
-  free(program_name); 
-  VECTOR_FREE(real_argv);
+  program_name_finalize();
+  VECTOR_FREE(g_real_argv);
+  free(g_parameterized_options); 
 }
 
 void
 app_initialize(char *argv0)
 {  
   // extract program name from command line	
-  set_program_name(argv0);  
+  program_name_initialize(argv0);  
   
   // register cleanup function
   if (atexit(app_finalize)) {
     halt("unable to register atexit!\n");	  
   } 
   
+  // initialize default values for fields
   field_initialize();
   
   // initializing IP default data
-  memcpy(ip_data, default_ip_data, INITIAL_PROGRAM_SIZE);
+  memcpy(g_ip_data, default_ip_data, INITIAL_PROGRAM_SIZE);
 
-  VECTOR_INIT(real_argv);
+  // initialize the array for real argv values
+  VECTOR_INIT(g_real_argv);
+  
+  // retrieve parameterized options
+  g_parameterized_options = retrieve_parameterized_options(OPTIONS);
 }
 
 void
@@ -88,15 +104,15 @@ usage(void)
   printf("IP creator (makeip) v%s\n\n", MAKEIP_VERSION);
   printf("Creates homebrew Sega Dreamcast bootstrap files (i.e. IP.BIN).\n\n");
   printf("Usage:\n");
-  printf("\t%s <IP.BIN> [options]\n", program_name);
-  printf("\t%s <ip.txt> <IP.BIN> [options]\n\n", program_name);
+  printf("\t%s <IP.BIN> [options] [ip_fields]\n", program_name_get());
+  printf("\t%s <ip.txt> <IP.BIN> [options] [ip_fields]\n\n", program_name_get());
   printf("Options:\n");
   printf("\t-f                  Force overwrite <IP.BIN> output file if exist\n");
   printf("\t-h                  Usage information (you\'re looking at it)\n");  
   printf("\t-l <mrfilename>     Insert a MR image into the IP.BIN\n"); 
   printf("\t-t <tmplfilename>   Use an external IP.TMPL file (override default)\n");     
   printf("\t-v                  Enable verbose mode\n");    
-  printf("\nInitial Program (IP) fields:\n");
+  printf("\nIP (Initial Program) fields:\n");
   printf("\t-a <areasymbols>    Area sym (J)apan, (U)SA, (E)urope (default: %s)\n", "JUE"); // TODO
   printf("\t-b <bootfilename>   Boot filename (default: %s)\n", field_get_value(BOOT_FILENAME));
   printf("\t-c <companyname>    Company name / SW maker name (default: %s)\n", field_get_value(SW_MAKER_NAME));
@@ -109,25 +125,29 @@ usage(void)
 }
 
 void
-parse_real_args()
+parse_real_args(int argc, char *argv[])
 {
-  real_argc = VECTOR_TOTAL(real_argv);
+  for(; optind < argc; optind++) {
+    VECTOR_ADD(g_real_argv, argv[optind]);
+  }
   
-  if (real_argc < 1) {
+  g_real_argc = VECTOR_TOTAL(g_real_argv);
+  
+  if (g_real_argc < 1) {
 	halt("too few arguments");  
   }
   
-  if (real_argc > 2) {
+  if (g_real_argc > 2) {
     halt("too many arguments");
   }
   
-  switch(real_argc) {
+  switch(g_real_argc) {
     case 1:
-      out_file = VECTOR_GET(real_argv, char*, 0);
+      g_filename_out = VECTOR_GET(g_real_argv, char*, 0);
       break;
     case 2:
-      in_file = VECTOR_GET(real_argv, char*, 0);
-	  out_file = VECTOR_GET(real_argv, char*, 1);
+      g_filename_in = VECTOR_GET(g_real_argv, char*, 0);
+	  g_filename_out = VECTOR_GET(g_real_argv, char*, 1);
       break;	
   }
 }
@@ -144,8 +164,9 @@ main(int argc, char *argv[])
     exit(EXIT_FAILURE);
   }
     
-  // read the options    
-  while ((c = getopt(argc, argv, ":a:b:c:d:e:fg:hi:n:l:p:t:v")) != -1) {
+  // read the options  
+  opterr = 0; // suppress default getopt error messages  
+  while ((c = getopt(argc, argv, OPTIONS)) != -1) {
     switch (c) {
       case 'a':
         field_set_value(AREA_SYMBOLS, optarg);	  
@@ -179,22 +200,21 @@ main(int argc, char *argv[])
         field_set_value(PRODUCT_NO, optarg);
         break;
       case 'l':
-        mr_file = optarg;
+        g_filename_mr = optarg;
         break;
       case 'p':
         field_set_value(PERIPHERALS, optarg);
         break;
       case 't':
-        ip_read(ip_data, optarg);
+        ip_read(g_ip_data, optarg);
 		break;
 	  case 'v':
 	    verbose_enable();
 		break;
-	  case ':':
-	    halt("option \"-%c\" requires an argument.\n", optopt);
-	    break;
       case '?':
-        if (isprint (optopt)) {
+	    if (is_in_char_array(optopt, g_parameterized_options)) {
+		  halt("option \"-%c\" requires an argument\n", optopt);	
+		} else if (isprint(optopt)) {
           halt("unknown option \"-%c\".\n", optopt);
         } else {
           halt("unknown option character \"\\x%x\".\n", optopt);
@@ -205,32 +225,29 @@ main(int argc, char *argv[])
   }
     
   // get extra arguments which are not parsed 
-  for(; optind < argc; optind++) {
-    VECTOR_ADD(real_argv, argv[optind]);
-  }
-  parse_real_args();
+  parse_real_args(argc, argv);
  
   // use an IP.TXT file for input 
-  if (in_file != NULL) {    	  
-    field_load(in_file);
+  if (g_filename_in != NULL) {    	  
+    field_load(g_filename_in);
   }
   
   // stop if an error was detected when setting a field value
   if (field_erroneous()) {
-    halt("field(s) incorrect(s); fix and try again");	  
+    halt("field error; fix incorrect value(s) and try again");	  
   } 
  
   // write data to the ip data 
-  field_write(ip_data);
+  field_write(g_ip_data);
 
   // check if the output IP.BIN is writable 
-  if (!overwrite && is_file_exist(out_file)) {
-    halt("output bootstrap file \"%s\" already exist\n", out_file);
+  if (!overwrite && is_file_exist(g_filename_out)) {
+    halt("output bootstrap file \"%s\" already exist\n", g_filename_out);
   }  
  
   // writing the file onto disk
-  log_notice("writing bootstrap to \"%s\"\n", out_file);
-  ip_write(ip_data, mr_file, out_file);
+  log_notice("writing bootstrap to \"%s\"\n", g_filename_out);
+  ip_write(g_ip_data, g_filename_mr, g_filename_out);
   
   return EXIT_SUCCESS;
 }

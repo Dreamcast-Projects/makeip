@@ -45,11 +45,11 @@
 #define MAX_YR 9999
 #define MIN_YR 1900
 
-char *program_name;
-
 void trim(char *str);
 
-void set_program_name(char *argv0);
+void program_name_initialize(char *argv0);
+char * program_name_get();
+void program_name_finalize();
 
 void verbose_enable();
 
@@ -67,5 +67,8 @@ int is_valid_hex(char *str);
 int is_strict_bool(char c);
 
 int is_file_exist(char *filename);
+
+char * retrieve_parameterized_options(char *opts);
+int is_in_char_array(char needle, char *haystack);
 
 #endif /* __UTILS_H__ */

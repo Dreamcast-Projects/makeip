@@ -33,6 +33,8 @@
 
 int g_verbose = 0;
 
+char *g_program_name;
+
 void
 trim(char *str)
 {
@@ -45,7 +47,7 @@ trim(char *str)
 }
 
 void
-set_program_name(char *argv0)
+program_name_initialize(char *argv0)
 {
   char *result = basename(argv0);
   char *buf = strrchr(result, '.');
@@ -53,7 +55,19 @@ set_program_name(char *argv0)
     int offset = buf - result;
     result[offset] = '\0';
   }
-  program_name = strdup(result);
+  g_program_name = strdup(result);
+}
+
+char *
+program_name_get()
+{
+  return g_program_name;
+}
+
+void
+program_name_finalize()
+{
+  free(g_program_name);	
 }
 
 void
@@ -62,7 +76,7 @@ log_notice(const char *format, ...)
   if (g_verbose) {
     va_list args;
   
-    fprintf(stdout, "%s: ", program_name);
+    fprintf(stdout, "%s: ", g_program_name);
   
     va_start(args, format);  
     vfprintf(stdout, format, args);
@@ -75,7 +89,7 @@ log_warn(const char *format, ...)
 {
   va_list args;
   
-  fprintf(stdout, "%s: warning: ", program_name);
+  fprintf(stdout, "%s: warning: ", g_program_name);
   
   va_start(args, format);  
   vfprintf(stdout, format, args);
@@ -87,7 +101,7 @@ log_error(const char *format, ...)
 {
   va_list args;
   
-  fprintf(stderr, "%s: error: ", program_name);
+  fprintf(stderr, "%s: error: ", g_program_name);
   
   va_start(args, format);  
   vfprintf(stderr, format, args);
@@ -99,7 +113,7 @@ halt(const char *format, ...)
 {
   va_list args;
   
-  fprintf(stderr, "%s: fatal: ", program_name);
+  fprintf(stderr, "%s: fatal: ", g_program_name);
   
   va_start(args, format);  
   vfprintf(stderr, format, args);
@@ -197,4 +211,35 @@ is_file_exist(char *filename)
 {
   struct stat stats;
   return (stat(filename, &stats) == 0);
+}
+
+int
+is_in_char_array(char needle, char *haystack)
+{
+  for(int i = 0; i < strlen(haystack); i++)
+  {
+    if(haystack[i] == needle)
+      return 1;
+  }
+  return 0;  
+}
+
+char *
+retrieve_parameterized_options(char *opts)
+{
+  char c = '\0';
+  int j = 0;
+
+  char *buf = (char *) malloc(strlen(opts) * sizeof(char));
+  memset(buf, '\0', strlen(opts));
+  
+  for(int i = 0; i < strlen(opts); i++) {
+    if (opts[i]	== ':' && c != '\0') {
+      buf[j++] = c;
+      c = '\0';	  
+	}
+	c = opts[i];
+  }
+  
+  return buf; // must be destroyed later
 }
