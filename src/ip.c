@@ -68,9 +68,14 @@ ip_write(char *ip, char *fn_mr, char *fn_ipout)
     halt("can't open \"%s\".\n", fn_ipout);
   }
 
+  int result = 1;
   if(fwrite(ip, 1, INITIAL_PROGRAM_SIZE, fh) != INITIAL_PROGRAM_SIZE) {
-    halt("output write error: %d\n", strerror(errno));
+    result = 0;
   }
 
-  fclose(fh);	
+  fclose(fh);
+  
+  if (!result) {
+    halt("output write error: %s\n", strerror(errno));
+  }
 }

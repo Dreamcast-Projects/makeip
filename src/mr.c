@@ -31,14 +31,15 @@
 
 #include "mr.h"
 
-int insert_mr(char *ip, char *mrfn)
+int
+insert_mr(char *ip, char *fn_mr)
 {
   int mr_size;
   char *mr_data;
-  FILE *mr = fopen(mrfn, "rb");
+  FILE *mr = fopen(fn_mr, "rb");
 
   if (mr == NULL) {
-    log_error("can't open mr file \"%s\".\n", mrfn);
+    log_error("can't open mr file \"%s\"\n", fn_mr);
     return 1;
   }
 
