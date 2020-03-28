@@ -245,4 +245,4 @@ The transparent color is `#c0c0c0`, or `192`, `192`, `192` in RGB.
 ## License
 
 This project is licensed under the **BSD 2-clause "Simplified" License** - see
-the [LICENSE](LICENSE.md) file for details.
+the [LICENSE](LICENSE) file for details.
