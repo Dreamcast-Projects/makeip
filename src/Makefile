@@ -2,7 +2,7 @@ TARGET = makeip
 
 VERSION = 2.0.0
 
-OBJECTS = utils.o vector.o crc.o mr.o field.o ip.o makeip.o
+OBJECTS = utils.o vector.o crc.o mr.o field.o ip.o main.o
 
 CC = gcc
 
