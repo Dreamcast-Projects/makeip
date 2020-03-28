@@ -212,7 +212,7 @@ To install the GIMP plug-in:
    `Preferences` > `Folders` (*Expand option*) > `Plugins`.
 3. That's it!
 
-![Example](img/gimp.png "GIMP")
+![GIMP](img/gimp.png "GIMP")
 
 ## About MR images
 
