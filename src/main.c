@@ -62,7 +62,7 @@ int g_real_argc = 0;
 VECTOR_DECLARE(g_real_argv);
 
 // options handled by makeip
-#define OPTIONS "a:b:c:d:e:fg:hi:n:l:p:t:v"
+#define OPTIONS "a:b:c:d:e:fg:hi:n:l:p:t:uv"
 char *g_parameterized_options;
 
 void
@@ -99,29 +99,37 @@ app_initialize(char *argv0)
 }
 
 void
-usage(void)
+usage(int print_field_information)
 {
   printf("IP creator (makeip) v%s\n\n", MAKEIP_VERSION);
   printf("Creates homebrew Sega Dreamcast bootstrap files (i.e. IP.BIN).\n\n");
   printf("Usage:\n");
   printf("\t%s <IP.BIN> [options] [ip_fields]\n", program_name_get());
   printf("\t%s <ip.txt> <IP.BIN> [options] [ip_fields]\n\n", program_name_get());
-  printf("Options:\n");
-  printf("\t-f                  Force overwrite <IP.BIN> output file if exist\n");
-  printf("\t-h                  Usage information (you\'re looking at it)\n");  
-  printf("\t-l <mrfilename>     Insert a MR image into the IP.BIN\n"); 
-  printf("\t-t <tmplfilename>   Use an external IP.TMPL file (override default)\n");     
-  printf("\t-v                  Enable verbose mode\n");    
-  printf("\nIP (Initial Program) fields:\n");
-  printf("\t-a <areasymbols>    Area sym (J)apan, (U)SA, (E)urope (default: %s)\n", "JUE"); // TODO
-  printf("\t-b <bootfilename>   Boot filename (default: %s)\n", field_get_value(BOOT_FILENAME));
-  printf("\t-c <companyname>    Company name / SW maker name (default: %s)\n", field_get_value(SW_MAKER_NAME));
-  printf("\t-d <releasedate>    Release date (format: YYYYMMDD, default: %s)\n", field_get_value(RELEASE_DATE));
-  printf("\t-e <version>        Product version (default: %s)\n", field_get_value(VERSION));
-  printf("\t-g <gametitle>      Title of the software (default: %s)\n", field_get_value(GAME_TITLE));  
-  printf("\t-i <deviceinfo>     Device info (format: CD-ROMx/y, default: %s)\n", "CD-ROM1/1");  // TODO
-  printf("\t-n <productno>      Product number (default: %s)\n", field_get_value(PRODUCT_NO));
-  printf("\t-p <peripherals>    Peripherals (default: %s)\n", field_get_value(PERIPHERALS));
+  if (!print_field_information) {
+    printf("Options:\n");
+    printf("\t-f                  Force overwrite <IP.BIN> output file if exist\n");
+    printf("\t-h                  Print usage information (you\'re looking at it)\n");  
+    printf("\t-l <mrfilename>     Insert a MR image into the IP.BIN\n"); 
+    printf("\t-t <tmplfilename>   Use an external IP.TMPL file (override default)\n");     
+    printf("\t-u                  Print field usage information\n");    
+    printf("\t-v                  Enable verbose mode\n");
+	printf("\nExamples:\n");
+	printf("\t%s ip.txt IP.BIN -l iplogo.mr\n", program_name_get());
+	printf("\t%s IP.BIN -g \"MY INCREDIBLE GAME\" -c \"INDIE DEV\" -vf\n", program_name_get());
+	printf("\t%s IP.BIN -t IP.TMPL -v\n", program_name_get());
+  } else {
+    printf("IP (Initial Program) fields:\n");
+    printf("\t-a <areasymbols>    Area sym (J)apan, (U)SA, (E)urope (default: %s)\n", "JUE"); // TODO
+    printf("\t-b <bootfilename>   Boot filename (default: %s)\n", field_get_value(BOOT_FILENAME));
+    printf("\t-c <companyname>    Company name / SW maker name (default: %s)\n", field_get_value(SW_MAKER_NAME));
+    printf("\t-d <releasedate>    Release date (format: YYYYMMDD, default: %s)\n", field_get_value(RELEASE_DATE));
+    printf("\t-e <version>        Product version (default: %s)\n", field_get_value(VERSION));
+    printf("\t-g <gametitle>      Title of the software (default: %s)\n", field_get_value(GAME_TITLE));  
+    printf("\t-i <deviceinfo>     Device info (format: CD-ROMx/y, default: %s)\n", "CD-ROM1/1");  // TODO
+    printf("\t-n <productno>      Product number (default: %s)\n", field_get_value(PRODUCT_NO));
+    printf("\t-p <peripherals>    Peripherals (default: %s)\n", field_get_value(PERIPHERALS));
+  }
 }
 
 void
@@ -160,7 +168,7 @@ main(int argc, char *argv[])
   app_initialize(argv[0]);
       
   if(argc < 2) {
-    usage();
+    usage(0);
     exit(EXIT_FAILURE);
   }
     
@@ -190,7 +198,7 @@ main(int argc, char *argv[])
         field_set_value(GAME_TITLE, optarg);
         break;
       case 'h':
-        usage();
+        usage(0);
         exit(EXIT_SUCCESS);
         break;	
       case 'i':
@@ -207,6 +215,10 @@ main(int argc, char *argv[])
         break;
       case 't':
         ip_read(g_ip_data, optarg);
+		break;
+      case 'u':
+        usage(1);
+        exit(EXIT_SUCCESS);
 		break;
 	  case 'v':
 	    verbose_enable();
