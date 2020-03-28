@@ -91,6 +91,25 @@ field_get_value(int index)
   return field_values[index];	
 }
 
+char *
+field_get_pretty_value(int index)
+{
+  char *deviceinfo = NULL;	
+  char *result = field_get_value(index);	
+
+  switch (index) {
+    case AREA_SYMBOLS:
+      trim(result);
+	  break;
+    case DEVICE_INFO:
+	  deviceinfo = strchr(result, ' ');
+      result = deviceinfo + 1; // skip the space char	  
+      break;	
+  }
+  
+  return result;
+}
+
 int
 field_set_value(int index, char *value) 
 {
@@ -314,7 +333,8 @@ _check_deviceinfo(field_t *f, char *value)
   }
   
   long dummy;
-  result = result && (strlen(deviceinfo) == 9) && (!strncmp(deviceinfo, "CD-ROM", 6))
+  result = result && (strlen(deviceinfo) == 9) 
+    && ((!strncmp(deviceinfo, "CD-ROM", 6)) || (!strncmp(deviceinfo, "GD-ROM", 6)))
     && substr_long_parse(deviceinfo, 6, 1, &dummy) && (deviceinfo[7] == '/')
 	&& substr_long_parse(deviceinfo, 8, 1, &dummy);
   

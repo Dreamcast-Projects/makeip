@@ -120,15 +120,15 @@ usage(int print_field_information)
 	printf("\t%s IP.BIN -t IP.TMPL -v\n", program_name_get());
   } else {
     printf("IP (Initial Program) fields:\n");
-    printf("\t-a <areasymbols>    Area sym (J)apan, (U)SA, (E)urope (default: %s)\n", "JUE"); // TODO
-    printf("\t-b <bootfilename>   Boot filename (default: %s)\n", field_get_value(BOOT_FILENAME));
-    printf("\t-c <companyname>    Company name / SW maker name (default: %s)\n", field_get_value(SW_MAKER_NAME));
-    printf("\t-d <releasedate>    Release date (format: YYYYMMDD, default: %s)\n", field_get_value(RELEASE_DATE));
-    printf("\t-e <version>        Product version (default: %s)\n", field_get_value(VERSION));
-    printf("\t-g <gametitle>      Title of the software (default: %s)\n", field_get_value(GAME_TITLE));  
-    printf("\t-i <deviceinfo>     Device info (format: CD-ROMx/y, default: %s)\n", "CD-ROM1/1");  // TODO
-    printf("\t-n <productno>      Product number (default: %s)\n", field_get_value(PRODUCT_NO));
-    printf("\t-p <peripherals>    Peripherals (default: %s)\n", field_get_value(PERIPHERALS));
+    printf("\t-a <areasymbols>    Area sym (J)apan, (U)SA, (E)urope (default: %s)\n", field_get_pretty_value(AREA_SYMBOLS));
+    printf("\t-b <bootfilename>   Boot filename (default: %s)\n", field_get_pretty_value(BOOT_FILENAME));
+    printf("\t-c <companyname>    Company name / SW maker name (default: %s)\n", field_get_pretty_value(SW_MAKER_NAME));
+    printf("\t-d <releasedate>    Release date (format: YYYYMMDD, default: %s)\n", field_get_pretty_value(RELEASE_DATE));
+    printf("\t-e <version>        Product version (default: %s)\n", field_get_pretty_value(VERSION));
+    printf("\t-g <gametitle>      Title of the software (default: %s)\n", field_get_pretty_value(GAME_TITLE));  
+    printf("\t-i <deviceinfo>     Device info (format: CD-ROMx/y, default: %s)\n", field_get_pretty_value(DEVICE_INFO));
+    printf("\t-n <productno>      Product number (default: %s)\n", field_get_pretty_value(PRODUCT_NO));
+    printf("\t-p <peripherals>    Peripherals (default: %s)\n", field_get_pretty_value(PERIPHERALS));
   }
 }
 

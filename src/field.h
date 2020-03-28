@@ -44,6 +44,7 @@ void field_load(char *in);
 void field_write(char *ip);
 
 char * field_get_value(int index);
+char * field_get_pretty_value(int index);
 int field_set_value(int index, char *value);
 
 int field_erroneous();
