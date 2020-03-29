@@ -212,7 +212,7 @@ GNU/Linux, macOS and Windows. The provided `gimp/file-mr.py` file is a
 [GIMP](https://www.gimp.org/) plug-in used for encode/decode **MR images**.
   
 So by using this plug-in, you can load and save `.mr` files directly in GIMP.
-As this plugin uses **Python-Fu**, you should have Python extensions enabled
+As this plugin uses **Python-Fu**, you should have **Python extensions** enabled
 in GIMP. [Read more here](https://docs.gimp.org/en/gimp-filters-python-fu.html).
 
 To install the GIMP Plug-In:
@@ -240,8 +240,8 @@ The transparent color is `#c0c0c0`, or `192`, `192`, `192` in RGB.
 * [Jacob Alberty](https://github.com/jacobalberty) (LiENUS): Copyright-free
   bootstrap replacement (`IP.TMPL`). It is used by default in the **IP creator**
   program.
-* [Marcus Comstedt](http://mc.pp.se/dc/sw.html) (
-  [zeldin](https://github.com/zeldin)): Initial release of the 
+* [Marcus Comstedt](http://mc.pp.se/dc/sw.html)
+  ([zeldin](https://github.com/zeldin)): Initial release of the 
   [IP creator](http://mc.pp.se/dc/sw.html) tool (`makeip`).
 * [Andrew Kieschnick](http://napalm-x.thegypsy.com/andrewk/dc/) (ADK/Napalm):
   Code to insert `.mr` images into `IP.BIN` from
