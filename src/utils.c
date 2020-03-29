@@ -43,15 +43,13 @@ void
 ltrim(char *str)
 {
   char *s_tmp = str;
-
-  while (isblank(*s_tmp)) /* isblank() detects spaces and tabs. */
-  {
+  size_t len = strlen(str);
+  while (isblank(*s_tmp)) {
     ++s_tmp;
   }
-
-  memmove(str, s_tmp, s_tmp - str); /* Please note the use of memmove() here, as it
-                                       allows the use of overlapping memory areas,
-                                       which is not allowed for memcpy(). */
+  len = len - (str - s_tmp);
+  memmove(str, s_tmp, len);
+  str[len] = '\0';
 }
 
 void
@@ -68,8 +66,8 @@ rtrim(char *str)
 void
 trim(char *str)
 {
-  ltrim(str);
   rtrim(str);
+  ltrim(str);
 }
 
 void
