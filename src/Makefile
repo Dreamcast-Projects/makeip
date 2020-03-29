@@ -19,9 +19,9 @@ endif
 OUTPUT = $(TARGET)$(EXECUTABLEEXTENSION)
 
 all: $(TARGET)
-	
+
 $(TARGET): $(OBJECTS)
-	$(CC) -o $(OUTPUT) $(OBJECTS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $(OUTPUT) $(OBJECTS)
 
 install:
 	mkdir -p $(INSTALLDIR)

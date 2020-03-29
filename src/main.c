@@ -65,35 +65,43 @@ VECTOR_DECLARE(g_real_argv);
 #define OPTIONS "a:b:c:d:e:fg:hi:n:l:p:t:uv"
 char *g_parameterized_options;
 
+// fields input from command-line
+char *g_field_inputs[NUM_FIELDS];
+
 void
 app_finalize(void)
 {
   field_finalize();
   program_name_finalize();
   VECTOR_FREE(g_real_argv);
-  free(g_parameterized_options); 
+  free(g_parameterized_options);
+  for(int i = 0; i < NUM_FIELDS; i++) {
+    if (g_field_inputs[i] != NULL) {
+      free(g_field_inputs[i]);
+    }
+  }
 }
 
 void
 app_initialize(char *argv0)
-{  
-  // extract program name from command line	
-  program_name_initialize(argv0);  
-  
+{
+  // extract program name from command line
+  program_name_initialize(argv0);
+
   // register cleanup function
   if (atexit(app_finalize)) {
-    halt("unable to register atexit!\n");	  
-  } 
-  
+    halt("unable to register atexit!\n");
+  }
+
   // initialize default values for fields
   field_initialize();
-  
+
   // initializing IP default data
   memcpy(g_ip_data, default_ip_data, INITIAL_PROGRAM_SIZE);
 
   // initialize the array for real argv values
   VECTOR_INIT(g_real_argv);
-  
+
   // retrieve parameterized options
   g_parameterized_options = retrieve_parameterized_options(OPTIONS);
 }
@@ -109,10 +117,10 @@ usage(int print_field_information)
   if (!print_field_information) {
     printf("Options:\n");
     printf("\t-f                  Force overwrite <IP.BIN> output file if exist\n");
-    printf("\t-h                  Print usage information (you\'re looking at it)\n");  
-    printf("\t-l <mrfilename>     Insert a MR image into the IP.BIN\n"); 
-    printf("\t-t <tmplfilename>   Use an external IP.TMPL file (override default)\n");     
-    printf("\t-u                  Print field usage information\n");    
+    printf("\t-h                  Print usage information (you\'re looking at it)\n");
+    printf("\t-l <mrfilename>     Insert a MR image into the IP.BIN\n");
+    printf("\t-t <tmplfilename>   Use an external IP.TMPL file (override default)\n");
+    printf("\t-u                  Print field usage information\n");
     printf("\t-v                  Enable verbose mode\n");
 	printf("\nExamples:\n");
 	printf("\t%s ip.txt IP.BIN -l iplogo.mr\n", program_name_get());
@@ -125,7 +133,7 @@ usage(int print_field_information)
     printf("\t-c <companyname>    Company name / SW maker name (default: %s)\n", field_get_pretty_value(SW_MAKER_NAME));
     printf("\t-d <releasedate>    Release date (format: YYYYMMDD, default: %s)\n", field_get_pretty_value(RELEASE_DATE));
     printf("\t-e <version>        Product version (default: %s)\n", field_get_pretty_value(VERSION));
-    printf("\t-g <gametitle>      Title of the software (default: %s)\n", field_get_pretty_value(GAME_TITLE));  
+    printf("\t-g <gametitle>      Title of the software (default: %s)\n", field_get_pretty_value(GAME_TITLE));
     printf("\t-i <deviceinfo>     Device info (format: CD-ROMx/y, default: %s)\n", field_get_pretty_value(DEVICE_INFO));
     printf("\t-n <productno>      Product number (default: %s)\n", field_get_pretty_value(PRODUCT_NO));
     printf("\t-p <peripherals>    Peripherals (default: %s)\n", field_get_pretty_value(PERIPHERALS));
@@ -138,17 +146,18 @@ parse_real_args(int argc, char *argv[])
   for(; optind < argc; optind++) {
     VECTOR_ADD(g_real_argv, argv[optind]);
   }
-  
+
   g_real_argc = VECTOR_TOTAL(g_real_argv);
-  
+
   if (g_real_argc < 1) {
-	halt("too few arguments");  
+    // this case should never happen
+    halt("too few arguments\n");
   }
-  
+
   if (g_real_argc > 2) {
-    halt("too many arguments");
+    halt("too many arguments\n");
   }
-  
+
   switch(g_real_argc) {
     case 1:
       g_filename_out = VECTOR_GET(g_real_argv, char*, 0);
@@ -156,110 +165,124 @@ parse_real_args(int argc, char *argv[])
     case 2:
       g_filename_in = VECTOR_GET(g_real_argv, char*, 0);
 	  g_filename_out = VECTOR_GET(g_real_argv, char*, 1);
-      break;	
+      break;
   }
+}
+
+void
+set_input_value(int index, char *optarg)
+{
+  g_field_inputs[index] = strdup(optarg);
 }
 
 int
 main(int argc, char *argv[])
 {
   int c, overwrite = 0;
-    
+
   app_initialize(argv[0]);
-      
+
   if(argc < 2) {
     usage(0);
     exit(EXIT_FAILURE);
   }
-    
-  // read the options  
-  opterr = 0; // suppress default getopt error messages  
+
+  // read the options
+  opterr = 0; // suppress default getopt error messages
   while ((c = getopt(argc, argv, OPTIONS)) != -1) {
     switch (c) {
       case 'a':
-        field_set_value(AREA_SYMBOLS, optarg);	  
+        set_input_value(AREA_SYMBOLS, optarg);
         break;
       case 'b':
-        field_set_value(BOOT_FILENAME, optarg);
+        set_input_value(BOOT_FILENAME, optarg);
         break;
       case 'c':
-        field_set_value(SW_MAKER_NAME, optarg);
+        set_input_value(SW_MAKER_NAME, optarg);
         break;
       case 'd':
-        field_set_value(RELEASE_DATE, optarg);
+        set_input_value(RELEASE_DATE, optarg);
         break;
       case 'e':
-        field_set_value(VERSION, optarg);
+        set_input_value(VERSION, optarg);
         break;
       case 'f':
-        overwrite = 1;	  
-        break;	  
+        overwrite = 1;
+        break;
       case 'g':
-        field_set_value(GAME_TITLE, optarg);
+        set_input_value(GAME_TITLE, optarg);
         break;
       case 'h':
         usage(0);
         exit(EXIT_SUCCESS);
-        break;	
+        break;
       case 'i':
-        field_set_value(DEVICE_INFO, optarg);
-        break;	
+        set_input_value(DEVICE_INFO, optarg);
+        break;
       case 'n':
-        field_set_value(PRODUCT_NO, optarg);
+        set_input_value(PRODUCT_NO, optarg);
         break;
       case 'l':
         g_filename_mr = optarg;
         break;
       case 'p':
-        field_set_value(PERIPHERALS, optarg);
+        set_input_value(PERIPHERALS, optarg);
         break;
       case 't':
         ip_read(g_ip_data, optarg);
-		break;
+        break;
       case 'u':
         usage(1);
         exit(EXIT_SUCCESS);
-		break;
-	  case 'v':
-	    verbose_enable();
-		break;
+        break;
+      case 'v':
+        verbose_enable();
+	break;
       case '?':
-	    if (is_in_char_array(optopt, g_parameterized_options)) {
-		  halt("option \"-%c\" requires an argument\n", optopt);	
-		} else if (isprint(optopt)) {
-          halt("unknown option \"-%c\".\n", optopt);
+        if (is_in_char_array(optopt, g_parameterized_options)) {
+	  halt("option \"-%c\" requires an argument\n", optopt);
+        } else if (isprint(optopt)) {
+          halt("unknown option \"-%c\"\n", optopt);
         } else {
-          halt("unknown option character \"\\x%x\".\n", optopt);
-		}
+          halt("unknown option character \"\\x%x\"\n", optopt);
+        }
       default:
         abort();
     }
   }
-    
-  // get extra arguments which are not parsed 
+
+  // get extra arguments which are not parsed
   parse_real_args(argc, argv);
- 
-  // use an IP.TXT file for input 
-  if (g_filename_in != NULL) {    	  
+
+  // assign field values from the ip template file
+  // use an 'IP.TXT' file for input
+  if (g_filename_in != NULL) {
     field_load(g_filename_in);
   }
-  
+
+  // assign field values from the command-line options
+  for (int i = 0; i < NUM_FIELDS; i++) {
+    if (g_field_inputs[i] != NULL) {
+      field_set_value(i, g_field_inputs[i]);
+    }
+  }
+
   // stop if an error was detected when setting a field value
   if (field_erroneous()) {
-    halt("field error; fix incorrect value(s) and try again");	  
-  } 
- 
-  // write data to the ip data 
+    halt("field error; fix incorrect value(s) and try again\n");
+  }
+
+  // write data to the ip data
   field_write(g_ip_data);
 
-  // check if the output IP.BIN is writable 
+  // check if the output IP.BIN is writable
   if (!overwrite && is_file_exist(g_filename_out)) {
     halt("output bootstrap file \"%s\" already exist\n", g_filename_out);
-  }  
- 
+  }
+
   // writing the file onto disk
   log_notice("writing bootstrap to \"%s\"\n", g_filename_out);
   ip_write(g_ip_data, g_filename_mr, g_filename_out);
-  
+
   return EXIT_SUCCESS;
 }

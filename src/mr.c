@@ -1,12 +1,13 @@
 /* IP Creator (makeip)
  *
- * Copyright (C) 2000, 2001, 2002, 2019, 2020 KallistiOS Team and contributors.
+ * Copyright (C) 2000, 2001, 2002, 2019, 2020 KOS Team and contributors.
  * All rights reserved.
  *
- * This code was contributed to KallistiOS by Andress Antonio Barajas
+ * This code was contributed to KallistiOS (KOS) by Andress Antonio Barajas
  * (BBHoodsta). It was originally made by Marcus Comstedt (zeldin). Some
- * portions were made by Andrew Kieschnick (ADK/Napalm). Heavily updated by
- * SiZiOUS. Bootstrap replacement (IP.TMPL) was made by Jacob Alberty (LiENUS).
+ * portions were made by Andrew Kieschnick (ADK/Napalm). Heavily updated
+ * by SiZiOUS. Bootstrap replacement (IP.TMPL) was made by Jacob Alberty
+ * (LiENUS).
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -36,6 +37,7 @@ insert_mr(char *ip, char *fn_mr)
 {
   int mr_size;
   char *mr_data;
+
   FILE *mr = fopen(fn_mr, "rb");
 
   if (mr == NULL) {
@@ -48,12 +50,14 @@ insert_mr(char *ip, char *fn_mr)
   fseek(mr, 0, SEEK_SET);
 
   if (mr_size > 8192) {
-    log_warn("this image is larger than 8192 bytes and will corrupt a normal IP.BIN, inserting anyway!\n");
+    log_warn("mr data  is larger than 8192 bytes and will corrupt a normal IP.BIN, inserting anyway!\n");
   }
 
-  mr_data = (char *)malloc(mr_size);
   int result = 1;
+
+  mr_data = (char *)malloc(mr_size);
   if (fread(mr_data, mr_size, 1, mr) != mr_size) {
+    log_error("unable to read mr file\n");
     result = 0;
   }
 
@@ -64,5 +68,5 @@ insert_mr(char *ip, char *fn_mr)
   free(mr_data);
   fclose(mr);
 
-  return 1;
+  return result;
 }

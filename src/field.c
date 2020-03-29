@@ -55,11 +55,11 @@ init_release_date()
   time_t now;
   struct tm ts;
   char tmpbuf[0x10];
-  
+
   time(&now);
   ts = *localtime(&now);
-  strftime(tmpbuf, sizeof(tmpbuf), "%Y%m%d", &ts); // YYYYMMDD  
-    
+  strftime(tmpbuf, sizeof(tmpbuf), "%Y%m%d", &ts); // YYYYMMDD
+
   field_set_value(RELEASE_DATE, tmpbuf);
 }
 
@@ -70,73 +70,79 @@ field_initialize()
   for (int i = 0; i < NUM_FIELDS; i++) {
     if (fields[i].default_value != NULL) {
       field_set_value(i, fields[i].default_value);
-	}
-  } 
-  
+    }
+  }
+
   // compute default release date
-  init_release_date();	
+  init_release_date();
 }
 
 void
 field_finalize()
 {
   for (int i = 0; i < NUM_FIELDS; i++) {
-    free(field_values[i]);  	  
-  }	
+    free(field_values[i]);
+  }
 }
 
 char *
-field_get_value(int index) 
+field_get_value(int index)
 {
-  return field_values[index];	
+  return field_values[index];
 }
 
 char *
 field_get_pretty_value(int index)
 {
-  char *deviceinfo = NULL;	
-  char *result = field_get_value(index);	
+  char *result = field_get_value(index);
+  char *deviceinfo = NULL;
 
   switch (index) {
     case AREA_SYMBOLS:
       trim(result);
-	  break;
+      break;
     case DEVICE_INFO:
-	  deviceinfo = strchr(result, ' ');
-      result = deviceinfo + 1; // skip the space char	  
-      break;	
+      deviceinfo = strchr(result, ' ');
+      result = deviceinfo + 1; // skip the space char
+      break;
   }
-  
+
   return result;
 }
 
 int
-field_set_value(int index, char *value) 
+field_set_value(int index, char *value)
 {
   field_t *f = &fields[index];
-  
-  // checking the value length for that field	
+
+  // checking the value length for that field
   if(strlen(value) > f->length) {
-    log_error("data for field \"%s\" is too long.\n", f->name);
+    log_error("data for field \"%s\" is too long\n", f->name);
     return 0;
   }
 
-  // preparing the field value
+  // destroying previous allocated memory if needed
+  if (field_values[index] != NULL) {
+    free(field_values[index]);
+  }
+
+  // allocating the required memory
   field_values[index] = (char *) malloc((f->length + 1) * sizeof(char));
   memset(field_values[index], ' ', f->length);
   field_values[index][f->length] = '\0';
 
+  // storing the value
   strcpy(field_values[index], value);
 
-  // do additional checks if required  
+  // do additional checks if required
   if(f->extra_check != NULL && !(*f->extra_check)(f, field_values[index])) {
-    g_field_error = 1;	  
+    g_field_error = 1;
     return 0;
   }
-   
-  log_notice("setting field \"%s\" to \"%s\"\n", f->name, field_get_value(index));	
-  
-  return 1;  
+
+  log_notice("setting field \"%s\" to \"%s\"\n", f->name, field_get_pretty_value(index));
+
+  return 1;
 }
 
 int
@@ -145,18 +151,18 @@ parse_file(FILE *fh)
   static char buf[80];
   int i, line = 0;
 
-  while(fgets(buf, sizeof(buf), fh)) {	  
+  while(fgets(buf, sizeof(buf), fh)) {
     char *p;
-	
-	line++;	
+
+    line++;
     trim(buf);
-	
+
     if(*buf) {
       if((p = strchr(buf, ':'))) {
         *p++ = '\0';
         trim(buf);
-        
-		for(i = 0; i < NUM_FIELDS; i++) {
+
+	for(i = 0; i < NUM_FIELDS; i++) {
           if(!strcmp(buf, fields[i].name))
             break;
         }
@@ -164,13 +170,14 @@ parse_file(FILE *fh)
         if(i >= NUM_FIELDS) {
           log_error("unknown field \"%s\"\n", buf);
           return 0;
-        }		
-        
+        }
+
         while(*p == ' ' || *p == '\t')
           p++;
-	  
+
         if (!field_set_value(i, p))
-		  return 0;
+          return 0;
+
       } else {
         log_error("missing colon (\":\") on line %d\n", line);
         return 0;
@@ -181,33 +188,33 @@ parse_file(FILE *fh)
   return 1;
 }
 
-void 
+void
 field_load(char *in)
 {
   FILE *fh = fopen(in, "r");
-  
+
   if(fh == NULL) {
-    halt("can't open template: \"%s\".\n", in);
+    halt("can't open template: \"%s\"\n", in);
   }
-  
+
   log_notice("loading template \"%s\"\n", in);
 
   int result;
   result = parse_file(fh);
-  
+
   fclose(fh);
-  
+
   if (!result) {
-    exit(EXIT_FAILURE);	  
+    exit(EXIT_FAILURE);
   }
 }
 
-void 
+void
 field_write(char *ip)
 {
   for (int i = 0; i < NUM_FIELDS; i++) {
     memset(ip + fields[i].position, ' ', fields[i].length);
-    char *p = field_get_value(i);    
+    char *p = field_get_value(i);
     memcpy(ip + fields[i].position, p, strlen(p));
   }
 }
@@ -217,12 +224,12 @@ field_erroneous() {
   return g_field_error;
 }
 
-int 
+int
 _check_areasym(field_t *f, char *value)
 {
-  int i, a = 0;  
-    
-  for(i = 0; i < strlen(value); i++) {  	 
+  int i, a = 0;
+
+  for(i = 0; i < strlen(value); i++) {
     switch(value[i]) {
      case 'J':
        a |= (1<<0);
@@ -252,7 +259,7 @@ _check_areasym(field_t *f, char *value)
   return 1;
 }
 
-int 
+int
 _check_date(field_t *f, char *value)
 {
   int is_date = is_valid_date(value);
@@ -260,11 +267,11 @@ _check_date(field_t *f, char *value)
   if (!is_date) {
     log_error("field \"%s\" is invalid date (format is \"YYYYMMDD\")\n", f->name);	  
   }
-  
+
   return is_date;
 }
 
-int 
+int
 _check_fixed(field_t *f, char *value)
 {
   int result = !(strcmp(f->default_value, value));
@@ -272,25 +279,26 @@ _check_fixed(field_t *f, char *value)
   if (!result) {
     log_error("field \"%s\" is not editable (must be \"%s\")\n", f->name, f->default_value);	  
   }
-  
-  return result;  
+
+  return result;
 }
- 
+
 int
 _check_version(field_t *f, char *value)
 {
   // value should be Vx.yyy
   int result;
   long major, minor;
-  
-  result = (strlen(value) == 6) && (value[0] == 'V') && (value[2] == '.') && 
-    substr_long_parse(value, 1, 1, &major) && substr_long_parse(value, 3, 3, &minor);
+
+  result = (strlen(value) == 6) && (value[0] == 'V') && (value[2] == '.') &&
+    substr_long_parse(value, 1, 1, &major) &&
+    substr_long_parse(value, 3, 3, &minor);
 
   if (!result) {
     log_error("field \"%s\" is invalid version (must be Vx.yyy)\n", f->name);
   }
 
-  return result;  
+  return result;
 }
 
 int
@@ -300,21 +308,21 @@ _check_peripherals(field_t *f, char *value)
   int result = 0;
 
   if (strlen(value) == 7) {
-    // check peripherals	  
-	char buf[6];
+    // check peripherals
+    char buf[6];
     strncpy(buf, value, 5);
     buf[5] = '\0';
 
     // check WinCE (useless but supported...) and VGA flags
-    result = is_valid_hex(buf) && is_strict_bool(value[5]) 
-	  && is_strict_bool(value[6]);	
+    result = is_valid_hex(buf) && is_strict_bool(value[5]) &&
+      is_strict_bool(value[6]);
   }
 
   if (!result) {
     log_error("field \"%s\" contains invalid values\n", f->name);
   }
-  
-  return result;  
+
+  return result;
 }
 
 int
@@ -322,34 +330,36 @@ _check_deviceinfo(field_t *f, char *value)
 {
   // can be legacy value like '0000 CD-ROMx/y' or 'CD-ROMx/y'
   int result = 1;
-  
+
   char *deviceinfo = strdup(value);
 
-  if (strlen(deviceinfo) == 14) { // '0000 CD-ROM1/1'
+  if (strlen(deviceinfo) == 14) { // '0000 CD-ROMx/y'
     char *device = strchr(deviceinfo, ' ');
-	*device++ = '\0';
-    result = result && (strlen(deviceinfo) == 4) && is_valid_hex(deviceinfo);	
-	strcpy(deviceinfo, device);
+    *device++ = '\0'; // deviceinfo = '0000'; device = 'CD-ROMx/y'
+    result = result && (strlen(deviceinfo) == 4) && is_valid_hex(deviceinfo);
+    memmove(deviceinfo, device, strlen(device)); // deviceinfo = 'CD-ROMx/y'
+    deviceinfo[strlen(device)] = '\0';
   }
-  
+
   long dummy;
-  result = result && (strlen(deviceinfo) == 9) 
-    && ((!strncmp(deviceinfo, "CD-ROM", 6)) || (!strncmp(deviceinfo, "GD-ROM", 6)))
+  result = result && (strlen(deviceinfo) == 9)
+    && ((!strncmp(deviceinfo, "CD-ROM", 6)) ||
+        (!strncmp(deviceinfo, "GD-ROM", 6)))
     && substr_long_parse(deviceinfo, 6, 1, &dummy) && (deviceinfo[7] == '/')
 	&& substr_long_parse(deviceinfo, 8, 1, &dummy);
-  
+
   if (!result) {
     log_error("field \"%s\" contains invalid values (must be CD-ROMx/y)\n", f->name);
   } else if (strlen(deviceinfo) == 9) {
-    // if short form (i.e. "CD-ROM1/1" only), append "0000" before
+    // if short form (i.e. "CD-ROMx/y" only), append "0000" before
     char *buf = (char *) malloc(f->length * sizeof(char));
-    strcpy(buf, "0000 "); // fake CRC
+    strcpy(buf, "0000 "); // fake CRC that will be updated by makeip
     strcat(buf, deviceinfo); // append CD-ROMx/y
     strcpy(value, buf); // result
-	free(buf);
+    free(buf);
   }
-  
+
   free(deviceinfo);
-  
-  return result;    
+
+  return result;
 }
