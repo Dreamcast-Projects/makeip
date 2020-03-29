@@ -5,9 +5,10 @@ VERSION = 2.0.0
 OBJECTS = utils.o vector.o crc.o mr.o field.o ip.o main.o
 
 CC = gcc
+STRIP = strip
 
 CFLAGS = -O2 -Wall -DMAKEIP_VERSION=\"$(VERSION)\"
-LDFLAGS = -s
+LDFLAGS =
 
 INSTALLDIR = $(KOS_BASE)/../bin
 
@@ -22,11 +23,12 @@ all: $(TARGET)
 
 $(TARGET): $(OBJECTS)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $(OUTPUT) $(OBJECTS)
+    $(STRIP) $(OUTPUT)
 
 install:
 	mkdir -p $(INSTALLDIR)
 	cp $(OUTPUT) $(INSTALLDIR)
 
-.PHONY: clean	
+.PHONY: clean
 clean:
 	-rm -f $(OUTPUT) *.o

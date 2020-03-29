@@ -114,8 +114,8 @@ usage(int print_field_information)
   printf("IP creator (makeip) v%s\n\n", MAKEIP_VERSION);
   printf("Creates homebrew Sega Dreamcast bootstrap files (i.e. IP.BIN).\n\n");
   printf("Usage:\n");
-  printf("\t%s <IP.BIN> [options] [ip_fields]\n", program_name_get());
-  printf("\t%s <ip.txt> <IP.BIN> [options] [ip_fields]\n\n", program_name_get());
+  printf("\t%s [options] [ip_fields] <IP.BIN>\n", program_name_get());
+  printf("\t%s [options] [ip_fields] <ip.txt> <IP.BIN>\n\n", program_name_get());
   if (!print_field_information) {
     printf("Options:\n");
     printf("\t-f                  Force overwrite <IP.BIN> output file if exist\n");
