@@ -125,9 +125,9 @@ usage(int print_field_information)
     printf("\t-u                  Print field usage information\n");
     printf("\t-v                  Enable verbose mode\n");
 	printf("\nExamples:\n");
-	printf("\t%s ip.txt IP.BIN -l iplogo.mr\n", program_name_get());
-	printf("\t%s IP.BIN -g \"MY INCREDIBLE GAME\" -c \"INDIE DEV\" -vf\n", program_name_get());
-	printf("\t%s IP.BIN -t IP.TMPL -v\n", program_name_get());
+	printf("\t%s -l iplogo.mr ip.txt IP.BIN\n", program_name_get());
+	printf("\t%s -g \"MY INCREDIBLE GAME\" -c \"INDIE DEV\" -vf IP.BIN\n", program_name_get());
+	printf("\t%s -t IP.TMPL -v IP.BIN\n", program_name_get());
   } else {
     printf("IP (Initial Program) fields:\n");
     printf("\t-a <areasymbols>    Area sym (J)apan, (U)SA, (E)urope (default: %s)\n", field_get_pretty_value(AREA_SYMBOLS));
