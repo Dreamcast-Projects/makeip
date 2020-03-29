@@ -1,7 +1,7 @@
 IP creator (makeip): Credits
 
 - Jacob Alberty (LiENUS): Copyright-free bootstrap replacement (IP.TMPL).
-- Marcus Comstedt (zeldin) Initial release of the IP creator (makeip).
+- Marcus Comstedt (zeldin): Initial release of the IP creator (makeip).
 - Andrew Kieschnick (ADK/Napalm): Code to insert .MR images into `IP.BIN` from
   logotools.
 - Andress Antonio Barajas (BBHoodsta): Tons of fixes and improvements. Maker of 
