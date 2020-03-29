@@ -44,7 +44,7 @@
 #define NUM_FIELDS 11
 
 typedef enum field_kind_t {
-  HARDWARE_ID = 0, 
+  HARDWARE_ID = 0,
   MAKER_ID,
   DEVICE_INFO,
   AREA_SYMBOLS,
@@ -55,7 +55,7 @@ typedef enum field_kind_t {
   BOOT_FILENAME,
   SW_MAKER_NAME,
   GAME_TITLE
-} field_kind_t; 
+} field_kind_t;
 
 struct field_t;
 
@@ -64,7 +64,7 @@ typedef struct field_t {
   char *name;
   char *default_value;
   int position;
-  int length;  
+  int length;
   int (*extra_check)(struct field_t *, char *);
 } field_t;
 

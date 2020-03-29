@@ -35,20 +35,20 @@ void
 ip_read(char *ip, char *fn_iptmpl)
 {
   FILE *fh = fopen(fn_iptmpl, "rb");
-  
+
   if(fh == NULL) {
     halt("can't open bootstrap template: \"%s\"\n", fn_iptmpl);
   }
-    
-  int success = 1;	
+
+  int success = 1;
   if(fread(ip, 1, INITIAL_PROGRAM_SIZE, fh) != INITIAL_PROGRAM_SIZE) {
     success = 0;
   }
-  
+
   fclose(fh);
-  
+
   if (!success) {
-    halt("bootstrap template: read error or wrong input file size\n");	  
+    halt("bootstrap template: read error or wrong input file size\n");
   }
 }
 
@@ -56,7 +56,7 @@ void
 ip_write(char *ip, char *fn_mr, char *fn_ipout)
 {
   FILE *fh;
-  
+
   update_crc(ip);
 
   if(fn_mr != NULL) {
@@ -65,7 +65,7 @@ ip_write(char *ip, char *fn_mr, char *fn_ipout)
 
   fh = fopen(fn_ipout, "wb");
   if(fh == NULL) {
-    halt("can't open \"%s\".\n", fn_ipout);
+    halt("can't open \"%s\" in write mode\n", fn_ipout);
   }
 
   int result = 1;
@@ -74,7 +74,7 @@ ip_write(char *ip, char *fn_mr, char *fn_ipout)
   }
 
   fclose(fh);
-  
+
   if (!result) {
     halt("output write error: %s\n", strerror(errno));
   }

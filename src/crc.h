@@ -36,6 +36,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "global.h"
+
 void update_crc(char *ip);
 
 #endif /* __CRC_H__ */

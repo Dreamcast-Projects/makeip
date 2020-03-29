@@ -41,7 +41,7 @@ insert_mr(char *ip, char *fn_mr)
   FILE *mr = fopen(fn_mr, "rb");
 
   if (mr == NULL) {
-    log_error("can't open mr file \"%s\"\n", fn_mr);
+    log_error("can't open MR file \"%s\"\n", fn_mr);
     return 0;
   }
 
@@ -50,14 +50,14 @@ insert_mr(char *ip, char *fn_mr)
   fseek(mr, 0, SEEK_SET);
 
   if (mr_size > 8192) {
-    log_warn("mr data  is larger than 8192 bytes and will corrupt a normal IP.BIN, inserting anyway!\n");
+    log_warn("MR data is larger than 8192 Bytes and may corrupt bootstrap, inserting anyway!\n");
   }
 
   int result = 1;
 
   mr_data = (char *)malloc(mr_size);
   if (fread(mr_data, mr_size, 1, mr) != mr_size) {
-    log_error("unable to read mr file\n");
+    log_error("unable to read MR file\n");
     result = 0;
   }
 

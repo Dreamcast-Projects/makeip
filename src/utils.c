@@ -39,10 +39,10 @@ void
 trim(char *str)
 {
   int l = strlen(str);
-  while(l > 0 && 
+  while(l > 0 &&
        (str[l-1] == '\r' || str[l-1] == '\n' ||
-		    str[l-1] == ' ' || str[l-1] == '\t')) {
-    str[--l]='\0';
+        str[l-1] == ' '  || str[l-1] == '\t')) {
+    str[--l] = '\0';
   }
 }
 
