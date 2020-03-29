@@ -8,7 +8,7 @@ CC = gcc
 STRIP = strip
 
 CFLAGS = -O2 -Wall -DMAKEIP_VERSION=\"$(VERSION)\"
-LDFLAGS =
+#LDFLAGS =
 
 INSTALLDIR = $(KOS_BASE)/../bin
 
@@ -23,7 +23,7 @@ all: $(TARGET)
 
 $(TARGET): $(OBJECTS)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $(OUTPUT) $(OBJECTS)
-    $(STRIP) $(OUTPUT)
+	$(STRIP) $(OUTPUT)
 
 install:
 	mkdir -p $(INSTALLDIR)
