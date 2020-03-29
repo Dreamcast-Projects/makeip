@@ -37,6 +37,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <libgen.h>
+#include <errno.h>
 
 #define INITIAL_PROGRAM_SIZE 0x8000
 

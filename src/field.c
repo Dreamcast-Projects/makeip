@@ -329,7 +329,7 @@ _check_deviceinfo(field_t *f, char *value)
     char *device = strchr(deviceinfo, ' ');
 	*device++ = '\0';
     result = result && (strlen(deviceinfo) == 4) && is_valid_hex(deviceinfo);	
-	deviceinfo = device;
+	strcpy(deviceinfo, device);
   }
   
   long dummy;
