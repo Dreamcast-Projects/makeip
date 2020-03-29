@@ -30,15 +30,32 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
- 
+
 #include "utils.h"
 
 int g_verbose = 0;
 
 char *g_program_name;
 
+// Thanks to alk
+// See: https://stackoverflow.com/a/30141322
 void
-trim(char *str)
+ltrim(char *str)
+{
+  char *s_tmp = str;
+
+  while (isblank(*s_tmp)) /* isblank() detects spaces and tabs. */
+  {
+    ++s_tmp;
+  }
+
+  memmove(str, s_tmp, s_tmp - str); /* Please note the use of memmove() here, as it
+                                       allows the use of overlapping memory areas,
+                                       which is not allowed for memcpy(). */
+}
+
+void
+rtrim(char *str)
 {
   int l = strlen(str);
   while(l > 0 &&
@@ -46,6 +63,13 @@ trim(char *str)
         str[l-1] == ' '  || str[l-1] == '\t')) {
     str[--l] = '\0';
   }
+}
+
+void
+trim(char *str)
+{
+  ltrim(str);
+  rtrim(str);
 }
 
 void

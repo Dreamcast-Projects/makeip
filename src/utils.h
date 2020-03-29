@@ -34,6 +34,7 @@
 #ifndef __UTILS_H__
 #define __UTILS_H__
 
+#include <ctype.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -42,11 +43,12 @@
 #include <time.h>
 #include <unistd.h>
 #include <sys/stat.h>
-#include <ctype.h>
 
 #define MAX_YR 9999
 #define MIN_YR 1900
 
+void ltrim(char *str);
+void rtrim(char *str);
 void trim(char *str);
 
 void program_name_initialize(char *argv0);
