@@ -7,7 +7,8 @@ Program**. This file is often known as the `IP.BIN` file.
 `IP.BIN` file is used for making selfboot (**MIL-CD**) discs for **Sega
 Dreamcast** softwares. When inserted in the bootsector of a disc, the bootstrap
 program (`IP.BIN`) executes the real Dreamcast program stored on the disc which
-is often called `1ST_READ.BIN`.
+is often called `1ST_READ.BIN`. The `IP.BIN` file is not needed on the
+filesystem.
 
 **IP creator** will generates a custom `IP.BIN` file designed for homebrew
 programs. It uses minimal copyrighted code from Sega, i.e. the minimum that
@@ -77,26 +78,27 @@ more info), this isn't necessary but it will still work.
 ###  Using command-line arguments
 
 If you want you may pass directly the field information by using the proper
-switch.
+switch. To print this list, use the `-u` switch instead of `-h`.
 
-	-a <areasymbols>    Area sym (J)apan, (U)SA, (E)urope (default is JUE)
-	-b <bootfilename>   Boot filename (default is 1ST_READ.BIN)
-	-c <companyname>    Company name / SW maker name (default is KallistiOS)
-	-d <releasedate>    Release date (format: YYYYMMDD, default is today)
-	-e <version>        Product version (default is V1.000)
-	-g <gametitle>      Title of the software (default is GAMETITLE)
-	-i <deviceinfo>     Device info (format: CD-ROMx/y, default is CD-ROM1/1)
-	-n <productno>      Product number (default is T-00000)
-	-p <peripherals>    Peripherals (default is E000F10)
+	-a <areasymbols>    Area sym (J)apan, (U)SA, (E)urope (default: JUE)
+	-b <bootfilename>   Boot filename (default: 1ST_READ.BIN)
+	-c <companyname>    Company name / SW maker name (default: KallistiOS)
+	-d <releasedate>    Release date (format: YYYYMMDD, default: 20200329)
+	-e <version>        Product version (default: V1.000)
+	-g <gametitle>      Title of the software (default: GAMETITLE)
+	-i <deviceinfo>     Device info (format: CD-ROMx/y, default: CD-ROM1/1)
+	-n <productno>      Product number (default: T-00000)
+	-p <peripherals>    Peripherals (default: E000F10)
 
 ### About options
 
-Additional available options are:
+Additional available options are (displayed with the `-h` switch):
 	
 	-f                  Force overwrite <IP.BIN> output file if exist
+	-h                  Print usage information (you're looking at it)
 	-l <mrfilename>     Insert a MR image into the IP.BIN
-	-t <tmplfilename>   Use an external IP.TMPL file (override default, which is
-                        LiENUS IP.BIN replacement)
+	-t <tmplfilename>   Use an external IP.TMPL file (override default)
+	-u                  Print field usage information
 	-v                  Enable verbose mode
 
 To learn more about **MR images**, please read below.
@@ -104,6 +106,12 @@ To learn more about **MR images**, please read below.
 ## Information about specific fields
 
 Some fields used in the bootstrap need to be detailed:
+
+* Area Symbols
+* Device Information
+* Peripherals
+* Release Date
+* (Product) Version
 
 ### Area Symbols
 
@@ -197,24 +205,27 @@ initialized with today.
 The **Version** field is the `Vx.yyy` format, where `x` is the major number and
 `yyy` the minor number. Default is `V1.000`.
 
-## GIMP MR Image Plug-in
+## GIMP MR Image Plug-In
 
 [GIMP](https://www.gimp.org/) is a cross-platform image editor available for
 GNU/Linux, macOS and Windows. The provided `gimp/file-mr.py` file is a 
 [GIMP](https://www.gimp.org/) plug-in used for encode/decode **MR images**.
   
 So by using this plug-in, you can load and save `.mr` files directly in GIMP.
-To install the GIMP plug-in:
+As this plugin uses **Python-Fu**, you should have Python extensions enabled
+in GIMP. [Read more here](https://docs.gimp.org/en/gimp-filters-python-fu.html).
+
+To install the GIMP Plug-In:
 
 1. Make the plug-in executable: ```chmod +x file-mr.py``` or equivalent.
 2. Place the plug-in in the `plugins` directory. This directory is different
    depending on what operating system you use. To find out go to `GIMP` >
-   `Preferences` > `Folders` (*Expand option*) > `Plugins`.
+   `Preferences` > `Folders` (*Expand option*) > `Plugins` (see below).
 3. That's it!
 
-![GIMP](img/gimp.png "GIMP")
+![GIMP Plug-In Directory](img/gimp.png "GIMP Plug-In Directory")
 
-## About MR images
+## About MR Images
 
 To be used in the generated `IP.BIN` file, the **MR image** should be:
 

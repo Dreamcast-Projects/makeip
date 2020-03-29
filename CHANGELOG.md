@@ -32,6 +32,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - The `IP.TMPL` file is now embedded, it no longer depends of the external 
   `IP.TMPL` file.
+- Program is now licensed under the BSD 2-Clause License (previously it wasn't
+  licensed).
 
 ## [1.0.0] - 2000-09-05
 ### Added
