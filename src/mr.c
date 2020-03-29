@@ -45,28 +45,39 @@ insert_mr(char *ip, char *fn_mr)
     log_error("can't open MR file \"%s\"\n", fn_mr);
     return 0;
   }
-
+  
   fseek(mr, 0, SEEK_END);
   mr_size = ftell(mr);
   fseek(mr, 0, SEEK_SET);
 
   if (mr_size > 8192) {
-    log_warn("MR data is larger than 8192 Bytes and may corrupt bootstrap, inserting anyway!\n");
+    log_warn("MR data is larger than 8192 bytes and may corrupt bootstrap\n");
   }
-
+  
   int result = 1;
+  
+  if (!mr_size) {
+    log_error("MR file is empty\n");
+    result = 0;	
+  } else {
 
-  mr_data = (char *)malloc(mr_size);
-  if (fread(mr_data, mr_size, 1, mr) != mr_size) {
-    log_error("unable to read MR file\n");
-    result = 0;
+    mr_data = (char *)malloc(mr_size);  
+    if (!fread(mr_data, mr_size, 1, mr)) {
+      log_error("unable to read MR file\n");
+      result = 0;
+    }
+
+    if (result) {
+	  if (detect_file_type(mr_data) == MR) {	  
+        memcpy(ip + 0x3820, mr_data, mr_size);
+      } else {
+        log_error("not a valid MR file\n");
+      }
+    }
+	
+    free(mr_data);	
   }
 
-  if (result) {
-    memcpy(ip+0x3820, mr_data, mr_size);
-  }
-
-  free(mr_data);
   fclose(mr);
 
   return result;

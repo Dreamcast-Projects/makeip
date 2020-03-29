@@ -267,3 +267,18 @@ retrieve_parameterized_options(char *opts)
   
   return buf; // must be destroyed later
 }
+
+file_type_t
+detect_file_type(char *data)
+{
+  char sign[4];
+  
+  memset(sign, 0x0, sizeof(sign));  
+  
+  memcpy(sign, data, 2);
+  if (!strcmp(sign, "MR")) {
+    return MR;	  
+  }
+  
+  return UNSUPPORTED;
+}

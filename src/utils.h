@@ -47,6 +47,11 @@
 #define MAX_YR 9999
 #define MIN_YR 1900
 
+typedef enum file_type_t {
+  UNSUPPORTED = 0,
+  MR
+} file_type_t;
+
 void ltrim(char *str);
 void rtrim(char *str);
 void trim(char *str);
@@ -74,5 +79,7 @@ int is_file_exist(char *filename);
 
 char * retrieve_parameterized_options(char *opts);
 int is_in_char_array(char needle, char *haystack);
+
+file_type_t detect_file_type(char *data);
 
 #endif /* __UTILS_H__ */
