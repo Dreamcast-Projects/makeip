@@ -1,5 +1,7 @@
 *.o
-*.mr
-makeip
-IP.BIN
 *.exe
+IP.BIN
+ip.bin
+src/makeip
+src/ip.txt
+src/*.mr
