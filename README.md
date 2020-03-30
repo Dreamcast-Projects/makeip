@@ -244,13 +244,16 @@ The transparent color is `#c0c0c0`, or `192`, `192`, `192` in RGB.
   ([zeldin](https://github.com/zeldin)): Initial release of the 
   [IP creator](http://mc.pp.se/dc/sw.html) tool (`makeip`).
 * [Andrew Kieschnick](http://napalm-x.thegypsy.com/andrewk/dc/) (ADK/Napalm):
-  Code to insert `.mr` images into `IP.BIN` from
+  Code to insert `MR` images into `IP.BIN` and `PNG` to `MR` from
   [logotools](http://napalm-x.thegypsy.com/andrewk/dc/) (`logoinsert.c`).
+* [Hayden Kowalchuk](https://twitter.com/HaydenKowalchuk)
+  ([mrneo240](https://github.com/mrneo240)): Fixes on the original `logotools`
+  package.
 * [Andress Antonio Barajas](https://twitter.com/bbhoodsta)
   ([BBHoodsta](https://gitlab.com/BBHoodsta)): Tons of fixes and improvements.
   Maker of the **GIMP MR Image Plug-in**.
 * [SiZiOUS](http://sizious.com/): Complete refactoring of the project and
-  provider of the snippet for decoding `.mr` images (extracted from
+  provider of the snippet for decoding `MR` images (extracted from
   [Selfboot Inducer](https://sizious.com/download/dreamcast/#selfboot-inducer)).
 
 ## License

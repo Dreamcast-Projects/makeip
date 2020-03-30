@@ -269,16 +269,40 @@ retrieve_parameterized_options(char *opts)
 }
 
 file_type_t
-detect_file_type(char *data)
+detect_file_type(char *filename)
 {
-  char sign[4];
+  char data[4];
   
-  memset(sign, 0x0, sizeof(sign));  
+  memset(data, 0x0, sizeof(data));
+
+  FILE *f = fopen(filename, "rb");
+  if (f == NULL) {
+    log_error("can't open file \"%s\"\n", filename);
+    return INVALID;
+  }
   
-  memcpy(sign, data, 2);
-  if (!strcmp(sign, "MR")) {
-    return MR;	  
+  int result = 1;
+  if (!fread(data, sizeof(data), 1, f)) {
+    log_error("unable to read file\n");
+    result = 0;
+  }
+  
+  fclose(f);
+  
+  if (result) {
+    if (!memcmp(data, "MR", 2)) {
+      return MR;	  
+    } else if (!memcmp(data + 1, "PNG", 3)) {
+	  return PNG;
+	}
   }
   
   return UNSUPPORTED;
+}
+
+void
+bwrite(size_t *pos, void *dest, const void *source, size_t num)
+{
+  memcpy(dest + *pos, source, num);
+  *pos = *pos + num;
 }

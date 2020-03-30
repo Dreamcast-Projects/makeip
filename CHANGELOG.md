@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   switch to get the list of all the available fields.
 - All the fields are now validated when necessary (previously, only the **Area
   Symbols** field was validated).
+- **PNG** images are now supported for logo (extracted from `logotools`).
 
 ### Changed
 - Complete redesign/refactoring of the whole code. Splitting code into many

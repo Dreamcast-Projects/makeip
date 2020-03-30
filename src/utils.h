@@ -48,8 +48,10 @@
 #define MIN_YR 1900
 
 typedef enum file_type_t {
-  UNSUPPORTED = 0,
-  MR
+  INVALID = 0,
+  UNSUPPORTED,
+  MR,
+  PNG
 } file_type_t;
 
 void ltrim(char *str);
@@ -80,6 +82,8 @@ int is_file_exist(char *filename);
 char * retrieve_parameterized_options(char *opts);
 int is_in_char_array(char needle, char *haystack);
 
-file_type_t detect_file_type(char *data);
+file_type_t detect_file_type(char *filename);
+
+void bwrite(size_t *pos, void *dest, const void *source, size_t num);
 
 #endif /* __UTILS_H__ */

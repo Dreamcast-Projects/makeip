@@ -62,7 +62,7 @@ ip_write(char *ip, char *fn_mr, char *fn_ipout)
   update_crc(ip);
 
   if(fn_mr != NULL) {
-    insert_mr(ip, fn_mr);
+    mr_inject(ip, fn_mr);
   }
 
   fh = fopen(fn_ipout, "wb");

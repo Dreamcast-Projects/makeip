@@ -40,6 +40,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-int insert_mr(char *ip, char *mrfn);
+#include <png.h>
+
+int mr_inject(char *ip, char *filename);
 
 #endif /* __MR_H__ */
