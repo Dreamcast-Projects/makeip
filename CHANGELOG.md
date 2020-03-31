@@ -10,7 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   switch to get the list of all the available fields.
 - All the fields are now validated when necessary (previously, only the **Area
   Symbols** field was validated).
-- **PNG** images are now supported for logo (extracted from `logotools`).
+- **PNG** images are now supported for logo insertion (extracted from `logotools`).
+  **IP creator** may be used to convert a PNG image into a MR image by using
+  the `-l` and `-s` switches together.
 
 ### Changed
 - Complete redesign/refactoring of the whole code. Splitting code into many
@@ -27,14 +29,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   
 ## [1.5.0] - 2019-12-10
 ### Added
-- Support of command-line arguments to fill the fields of the `IP.BIN`.
-- **MR image** insertion into the `IP.BIN`.
+- Support of command-line arguments to edit the fields of the `IP.BIN`.
+- Support of **MR image** insertion into the `IP.BIN`.
 
 ### Changed
 - The `IP.TMPL` file is now embedded, it no longer depends of the external 
   `IP.TMPL` file.
-- Program is now licensed under the BSD 2-Clause License (previously it wasn't
-  licensed).
+- Program is now licensed under the **BSD 2-Clause License** (previously it
+  wasn't licensed).
 
 ## [1.0.0] - 2000-09-05
 ### Added
