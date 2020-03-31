@@ -71,7 +71,7 @@ typedef struct mr_output_t {
 } mr_output_t;
 
 char *
-mr_get_friendly_supported_format(void) 
+mr_get_friendly_supported_format(void)
 {
   return MR_FRIENDLY_SUPPORTED_FORMAT;
 }
@@ -339,12 +339,18 @@ png_read(char *file_name, mr_output_t *output)
 }
 
 void
+mr_init(mr_output_t *output)
+{
+  memset(&output, 0, sizeof(output));
+}
+
+void
 mr_destroy(mr_output_t *output)
 {
   if (output->data) {
-    free(output->data);    
+    free(output->data);
   }
-  memset(&output, 0, sizeof(output));  
+  mr_init(output);
 }
 
 void
@@ -356,13 +362,13 @@ mr_dump(mr_output_t *output, char *outfn)
     log_error("can't open MR file \"%s\"\n", outfn);
     return;
   }
-     
+
   if (!fwrite(output->data, output->size, 1, mr)) {
     log_error("unable to write MR file\n");
   } else {
     log_notice("successfully dumped MR data to \"%s\"\n", outfn);
   }
-  
+
   fclose(mr);
 }
 
@@ -372,8 +378,6 @@ mr_load(char *fn_imgin, mr_output_t *output)
   file_type_t ftype = detect_file_type(fn_imgin);
 
   int result = 0;
-  
-  mr_destroy(output);
 
   switch(ftype) {
     case MR:
@@ -381,11 +385,11 @@ mr_load(char *fn_imgin, mr_output_t *output)
 	  result = mr_read(fn_imgin, output);
       break;
     case PNG:
-      log_notice("file \"%s\" is Portable Network Graphics (PNG)\n", fn_imgin);	
+      log_notice("file \"%s\" is Portable Network Graphics (PNG)\n", fn_imgin);
 	  result = png_read(fn_imgin, output);
       break;
     case UNSUPPORTED:
-      halt("unsupported file format\n");      
+      halt("unsupported file format\n");
       break;
     case INVALID:
       halt("invalid file\n");
@@ -395,26 +399,28 @@ mr_load(char *fn_imgin, mr_output_t *output)
     log_notice("successfully loaded logo from \"%s\"\n", fn_imgin);
     log_notice("MR total size is %d bytes\n", output->size);
   } else {
-    halt("unable to process logo from \"%s\"\n", fn_imgin);    
+    halt("unable to process logo from \"%s\"\n", fn_imgin);
   }
 
   if (output->size < 1) {
-    halt("empty logo file\n");    
+    halt("empty logo file\n");
   }
 
   if (output->size > MR_MAX_SIZE) {
     log_warn("MR data is larger than %d bytes and may corrupt bootstrap\n", MR_MAX_SIZE);
-  }  
+  }
 }
 
 void
 mr_export(char *fn_imgin, char *fn_imgout)
 {
   mr_output_t output;
-  
+
+  mr_init(&output);
+
   mr_load(fn_imgin, &output);
   mr_dump(&output, fn_imgout);
-  
+
   mr_destroy(&output);
 }
 
@@ -422,16 +428,18 @@ void
 mr_inject(char *ip, char *fn_imgin, char *fn_imgout)
 {
   mr_output_t output;
-  
+
+  mr_init(&output);
+
   mr_load(fn_imgin, &output);
 
   memcpy(ip + MR_OFFSET, output.data, output.size);
 
   log_notice("successfully inserted logo in bootstrap\n");
-  
+
   if (fn_imgout != NULL) {
     mr_dump(&output, fn_imgout);
   }
-  
+
   mr_destroy(&output);
 }
