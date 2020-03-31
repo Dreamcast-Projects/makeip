@@ -36,7 +36,7 @@
 typedef struct image_t {
   unsigned int size;
   unsigned int width;
-  unsigned int height;	
+  unsigned int height;
   unsigned char *data;
 } image_t;
 
@@ -62,7 +62,7 @@ typedef struct mr_t {
 
 typedef struct mr_output_t {
   unsigned int size;
-  unsigned char *data;  
+  unsigned char *data;
 } mr_output_t;
 
 int
@@ -72,11 +72,10 @@ mr_compress(char *in, char *out, int size)
   int position = 0;
   int run;
 
-  while (position <= size) {
-
+  while (position < size) {
     run = 1;
 
-    while((in[position] == in[position+run]) && (run < 0x17f) && (position+run <= size)) {
+    while((position+run < size) && (in[position] == in[position+run]) && (run < 0x17f)) {
       run++;
     }
 
@@ -94,7 +93,7 @@ mr_compress(char *in, char *out, int size)
     } else {
       out[length++] = in[position];
     }
-	
+
     position += run;
 
   }
@@ -105,118 +104,110 @@ mr_compress(char *in, char *out, int size)
 int
 mr_convert_raw(image_t *image, mr_output_t *output)
 {
-    palette_t palette;
-    mr_t mr;
-    int i;
-    int *data;
-    char *raw_output;
-    char *compressed_output;
-    int crap = 0;
-    int compressed_size;
-    
-    palette.count = 0;
+  palette_t palette;
+  mr_t mr;
+  int i;
+  int *data;
+  char *raw_output;
+  char *compressed_output;
+  int crap = 0;
+  int compressed_size;
 
-    data = (int *)image->data;
+  palette.count = 0;
 
-    raw_output = (char *)malloc(image->width * image->height);
-    compressed_output = (char *)malloc(image->width * image->height);
+  data = (int *)image->data;
 
-    for(i = 0; i < image->width * image->height; i++) {
-	  int found = 0;
-	  int c = 0;
+  raw_output = (char *)malloc(image->width * image->height);
+  compressed_output = (char *)malloc(image->width * image->height);
 
-	  while ((!found) && (c < palette.count)) {
-	    if (!memcmp(&data[i], &palette.color[c], 3)) {
-		  found = 1;
-	    } else {
-		  c++;
-        }
+  for(i = 0; i < image->width * image->height; i++) {
+    int found = 0;
+    int c = 0;
+
+    while ((!found) && (c < palette.count)) {
+      if (!memcmp(&data[i], &palette.color[c], 3)) {
+        found = 1;
+      } else {
+        c++;
       }
-	  
-	  if ((!found) && (c == 128)) {
-	    printf("Reduce the number of colors to <= 128 and try again.\n");
-	    return 0;
-	  }
-	  
-	  if (!found) {
-	    memcpy(&palette.color[c], &data[i], 3);
-	    palette.count++;
-	  }
-	  
-	  raw_output[i] = c;
-    }
+   }
 
-    log_notice("found %d colors\n", palette.count);
+   if ((!found) && (c == 128)) {
+     log_error("Reduce the number of colors to <= 128 and try again\n");
+       return 0;
+     }
 
-    mr.width = image->width;
-    mr.height = image->height;
-    mr.colors = palette.count;
+     if (!found) {
+       memcpy(&palette.color[c], &data[i], 3);
+       palette.count++;
+     }
 
-    log_notice("compressing %d bytes to ", image->width * image->height);
+     raw_output[i] = c;
+   }
 
-    compressed_size = mr_compress(raw_output, compressed_output, image->width * image->height);
+   log_notice("found %d colors\n", palette.count);
 
-    log_notice("%d bytes\n",compressed_size);
+   mr.width = image->width;
+   mr.height = image->height;
+   mr.colors = palette.count;
 
-    if (compressed_size <= 8192) {
-	  log_notice("This will fit in a normal ip.bin.\n");
-    } else {
-	  log_notice("This will NOT fit in a normal ip.bin - it is %d bytes too big!\n", compressed_size - 8192);
-    }
-	
-    mr.offset = 2 + 7 * 4 + palette.count * 4;
-    mr.size = 2 + 7 * 4 + palette.count * 4 + compressed_size;
+   compressed_size = mr_compress(raw_output, compressed_output, image->width * image->height);
 
-    size_t p = 0;
-	
-    output->size = mr.size;
-    output->data = (unsigned char *) malloc(mr.size);
+   log_notice("compressed %d bytes to %d bytes\n", image->width * image->height, compressed_size);
 
-    bwrite(&p, output->data, "MR", 2);
-    bwrite(&p, output->data, &mr.size, 4);
-    bwrite(&p, output->data, &crap, 4);
-    bwrite(&p, output->data, &mr.offset, 4);
-    bwrite(&p, output->data, &mr.width, 4);
-    bwrite(&p, output->data, &mr.height, 4);
-    bwrite(&p, output->data, &crap, 4);
-    bwrite(&p, output->data, &mr.colors, 4);
+   mr.offset = 2 + 7 * 4 + palette.count * 4;
+   mr.size = 2 + 7 * 4 + palette.count * 4 + compressed_size;
 
-    for(i = 0; i < palette.count; i++) {
-	  bwrite(&p, output->data, &palette.color[i].b, 1);
-	  bwrite(&p, output->data, &palette.color[i].g, 1);
-	  bwrite(&p, output->data, &palette.color[i].r, 1);
-	  bwrite(&p, output->data, &crap, 1);
-    }
+   size_t p = 0;
+
+   output->size = mr.size;
+   output->data = (unsigned char *) malloc(mr.size);
+
+   bwrite(&p, output->data, "MR", 2);
+   bwrite(&p, output->data, &mr.size, 4);
+   bwrite(&p, output->data, &crap, 4);
+   bwrite(&p, output->data, &mr.offset, 4);
+   bwrite(&p, output->data, &mr.width, 4);
+   bwrite(&p, output->data, &mr.height, 4);
+   bwrite(&p, output->data, &crap, 4);
+   bwrite(&p, output->data, &mr.colors, 4);
+
+   for(i = 0; i < palette.count; i++) {
+     bwrite(&p, output->data, &palette.color[i].b, 1);
+     bwrite(&p, output->data, &palette.color[i].g, 1);
+     bwrite(&p, output->data, &palette.color[i].r, 1);
+     bwrite(&p, output->data, &crap, 1);
+  }
 
   bwrite(&p, output->data, compressed_output, compressed_size);
 
   free(raw_output);
   free(compressed_output);
-  
-  return 1;	
+
+  return 1;
 }
 
 int
 mr_read(char *file_name, mr_output_t *output)
-{  
+{
   FILE *mr = fopen(file_name, "rb");
   if (mr == NULL) {
     log_error("can't open MR file \"%s\"\n", file_name);
     return 0;
   }
-  
+
   fseek(mr, 0, SEEK_END);
   output->size = ftell(mr);
   fseek(mr, 0, SEEK_SET);
 
   int result = 1;
-  
+
   if (!output->size) {
     log_error("MR file is empty\n");
-    result = 0;	
+    result = 0;
   } else {
     log_notice("loading MR file (\"%s\", %d bytes)\n", file_name, output->size);
-	
+
     output->data = (unsigned char *) malloc (output->size);
 	if (!fread(output->data, output->size, 1, mr)) {
       log_error("unable to read MR file\n");
@@ -294,7 +285,7 @@ png_read(char *file_name, mr_output_t *output)
    if (color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8)
       png_set_expand(png_ptr);
 
-   // Expand paletted or RGB images with transparency to full alpha channels so 
+   // Expand paletted or RGB images with transparency to full alpha channels so
    // the data will be available as RGBA quartets.
    if (png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS))
       png_set_expand(png_ptr);
@@ -313,7 +304,7 @@ png_read(char *file_name, mr_output_t *output)
 
      for (row = 0; row < height; row++)
 	   row_pointers[row] = pngimg.data + pngimg.width * 4 * row;
-       
+
      png_read_image(png_ptr, row_pointers);
    }
 
@@ -322,9 +313,9 @@ png_read(char *file_name, mr_output_t *output)
    png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
 
    fclose(fp);
-   
+
    mr_convert_raw(&pngimg, output);
-   
+
    free(pngimg.data);
 
    return 1;
@@ -334,12 +325,12 @@ int
 mr_inject(char *ip, char *filename)
 {
   file_type_t ftype = detect_file_type(filename);
-  
+
   int r = 0;
-  
+
   mr_output_t output;
   memset(&output, 0, sizeof(output));
-  
+
   switch(ftype) {
     case MR:
 	  r = mr_read(filename, &output);
@@ -348,31 +339,31 @@ mr_inject(char *ip, char *filename)
 	  r = png_read(filename, &output);
       break;
     case UNSUPPORTED:
-      log_error("unsupported file format");
-      return 0;	  
+      log_error("unsupported file format\n");
+      return 0;
       break;
     case INVALID:
-      return 0;	
+      return 0;
   }
-  
+
   if (r) {
     log_notice("loaded %s, %d\n", filename, output.size);
   } else {
     log_error("unable to read %s\n", filename);
     return 0;
   }
-  
+
   if (output.size < 1) {
-    log_error("empty file");	  
-    return 0;	  
+    log_error("empty file\n");
+    return 0;
   }
-  
+
   if (output.size > 8192) {
     log_warn("MR data is larger than 8192 bytes and may corrupt bootstrap\n");
   }
-  
+
   memcpy(ip + 0x3820, output.data, output.size);
-  
+
   free(output.data);
 
   return 1;
