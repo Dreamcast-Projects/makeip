@@ -35,7 +35,7 @@ It requires `libpng-dev` installed.
 
 1. Edit the `Makefile` and check if everything is OK for you (e.g. `libpng`
    directories);
-2. Enter `make`.
+2. Enter `make` (`gmake` on BSD systems).
 
 ## Usage
 
