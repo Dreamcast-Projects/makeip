@@ -47,6 +47,8 @@
 #define MAX_YR 9999
 #define MIN_YR 1900
 
+#define MR_FRIENDLY_SUPPORTED_FORMAT "MR; PNG";
+
 typedef enum file_type_t {
   INVALID = 0,
   UNSUPPORTED,

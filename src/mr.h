@@ -42,6 +42,8 @@
 
 #include <png.h>
 
-int mr_inject(char *ip, char *filename);
+char * mr_get_friendly_supported_format(void);
+void mr_export(char *fn_imgin, char *fn_imgout);
+void mr_inject(char *ip, char *fn_imgin, char *fn_imgout);
 
 #endif /* __MR_H__ */

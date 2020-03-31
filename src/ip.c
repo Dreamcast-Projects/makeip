@@ -51,18 +51,20 @@ ip_read(char *ip, char *fn_iptmpl)
 
   if (!success) {
     halt("bootstrap template: read error or wrong input file size\n");
+  } else {
+    log_notice("successfully replaced default bootstrap template with \"%s\"\n", fn_iptmpl);
   }
 }
 
 void
-ip_write(char *ip, char *fn_mr, char *fn_ipout)
+ip_write(char *ip, char *fn_ipout, char *fn_imgin, char *fn_imgout)
 {
   FILE *fh;
 
   update_crc(ip);
 
-  if(fn_mr != NULL) {
-    mr_inject(ip, fn_mr);
+  if(fn_imgin != NULL) {
+    mr_inject(ip, fn_imgin, fn_imgout);
   }
 
   fh = fopen(fn_ipout, "wb");

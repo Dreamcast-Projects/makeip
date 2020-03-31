@@ -43,6 +43,6 @@
 #include "mr.h"
 
 void ip_read(char *ip, char *fn_iptmpl);
-void ip_write(char *ip, char *fn_mr, char *fn_ipout);
+void ip_write(char *ip, char *fn_ipout, char *fn_imgin, char *fn_imgout);
 
 #endif /* __IP_H__ */

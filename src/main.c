@@ -50,8 +50,11 @@
 // Output IP.BIN filename
 char *g_filename_out = NULL;
 
-// MR image file (if any)
-char *g_filename_mr = NULL;
+// Input image file (if any)
+char *g_filename_image_in = NULL;
+
+// Output image file (if any)
+char *g_filename_image_out = NULL;
 
 // ip.txt file (if any)
 char *g_filename_in = NULL;
@@ -64,7 +67,7 @@ int g_real_argc = 0;
 VECTOR_DECLARE(g_real_argv);
 
 // options handled by makeip
-#define OPTIONS "a:b:c:d:e:fg:hi:n:l:p:t:uv"
+#define OPTIONS "a:b:c:d:e:fg:hi:n:l:p:s:t:uv"
 char *g_parameterized_options;
 
 // fields input from command-line
@@ -115,30 +118,32 @@ usage(int print_field_information)
   printf("Creates homebrew Sega Dreamcast bootstrap files (i.e. IP.BIN).\n\n");
   printf("Usage:\n");
   printf("\t%s [options] [ip_fields] <IP.BIN>\n", program_name_get());
-  printf("\t%s [options] [ip_fields] <ip.txt> <IP.BIN>\n\n", program_name_get());
+  printf("\t%s [options] [ip_fields] <ip.txt> <IP.BIN>\n", program_name_get());
+  printf("\t%s -l <iplogo_in> -s <iplogo.mr>\n\n", program_name_get());
   if (!print_field_information) {
     printf("Options:\n");
-    printf("\t-f                  Force overwrite <IP.BIN> output file if exist\n");
-    printf("\t-h                  Print usage information (you\'re looking at it)\n");
-    printf("\t-l <mrfilename>     Insert a MR image into the IP.BIN\n");
-    printf("\t-t <tmplfilename>   Use an external IP.TMPL file (override default)\n");
-    printf("\t-u                  Print field usage information\n");
-    printf("\t-v                  Enable verbose mode\n");
+    printf("\t-f                 Force overwrite output file if already exist\n");
+    printf("\t-h                 Print usage information (you\'re looking at it)\n");
+    printf("\t-l <infilename>    Load/insert an image into bootstrap (%s)\n", mr_get_friendly_supported_format());
+    printf("\t-t <tmplfilename>  Use an external IP.TMPL file (override default)\n");
+    printf("\t-u                 Print field usage information\n");
+    printf("\t-s <outfilename>   Save image from <infilename> to MR format (see \'-l\')\n");
+    printf("\t-v                 Enable verbose mode\n");
 	printf("\nExamples:\n");
 	printf("\t%s -l iplogo.mr ip.txt IP.BIN\n", program_name_get());
-	printf("\t%s -g \"MY INCREDIBLE GAME\" -c \"INDIE DEV\" -vf IP.BIN\n", program_name_get());
-	printf("\t%s -t IP.TMPL -v IP.BIN\n", program_name_get());
+	printf("\t%s -g \"MY INCREDIBLE GAME\" -c \"INDIE DEV\" -t IP.TMPL -v -f IP.BIN\n", program_name_get());
+	printf("\t%s -l iplogo.png -s iplogo.mr -v -f \n", program_name_get());
   } else {
     printf("IP (Initial Program) fields:\n");
-    printf("\t-a <areasymbols>    Area sym (J)apan, (U)SA, (E)urope (default: %s)\n", field_get_pretty_value(AREA_SYMBOLS));
-    printf("\t-b <bootfilename>   Boot filename (default: %s)\n", field_get_pretty_value(BOOT_FILENAME));
-    printf("\t-c <companyname>    Company name / SW maker name (default: %s)\n", field_get_pretty_value(SW_MAKER_NAME));
-    printf("\t-d <releasedate>    Release date (format: YYYYMMDD, default: %s)\n", field_get_pretty_value(RELEASE_DATE));
-    printf("\t-e <version>        Product version (default: %s)\n", field_get_pretty_value(VERSION));
-    printf("\t-g <gametitle>      Title of the software (default: %s)\n", field_get_pretty_value(GAME_TITLE));
-    printf("\t-i <deviceinfo>     Device info (format: CD-ROMx/y, default: %s)\n", field_get_pretty_value(DEVICE_INFO));
-    printf("\t-n <productno>      Product number (default: %s)\n", field_get_pretty_value(PRODUCT_NO));
-    printf("\t-p <peripherals>    Peripherals (default: %s)\n", field_get_pretty_value(PERIPHERALS));
+    printf("\t-a <areasymbols>   Area sym (J)apan, (U)SA, (E)urope (default: %s)\n", field_get_pretty_value(AREA_SYMBOLS));
+    printf("\t-b <bootfilename>  Boot filename (default: %s)\n", field_get_pretty_value(BOOT_FILENAME));
+    printf("\t-c <companyname>   Company name / SW maker name (default: %s)\n", field_get_pretty_value(SW_MAKER_NAME));
+    printf("\t-d <releasedate>   Release date (format: YYYYMMDD, default: %s)\n", field_get_pretty_value(RELEASE_DATE));
+    printf("\t-e <version>       Product version (default: %s)\n", field_get_pretty_value(VERSION));
+    printf("\t-g <gametitle>     Title of the software (default: %s)\n", field_get_pretty_value(GAME_TITLE));
+    printf("\t-i <deviceinfo>    Device info (format: CD-ROMx/y, default: %s)\n", field_get_pretty_value(DEVICE_INFO));
+    printf("\t-n <productno>     Product number (default: %s)\n", field_get_pretty_value(PRODUCT_NO));
+    printf("\t-p <peripherals>   Peripherals (default: %s)\n", field_get_pretty_value(PERIPHERALS));
   }
 }
 
@@ -150,15 +155,6 @@ parse_real_args(int argc, char *argv[])
   }
 
   g_real_argc = VECTOR_TOTAL(g_real_argv);
-
-  if (g_real_argc < 1) {
-    // this case should never happen
-    halt("too few arguments\n");
-  }
-
-  if (g_real_argc > 2) {
-    halt("too many arguments\n");
-  }
 
   switch(g_real_argc) {
     case 1:
@@ -180,7 +176,7 @@ set_input_value(int index, char *optarg)
 int
 main(int argc, char *argv[])
 {
-  int c, overwrite = 0;
+  int c, overwrite = 0, export_logo_only = 0;
 
   app_initialize(argv[0]);
 
@@ -225,10 +221,13 @@ main(int argc, char *argv[])
         set_input_value(PRODUCT_NO, optarg);
         break;
       case 'l':
-        g_filename_mr = optarg;
+        g_filename_image_in = optarg;
         break;
       case 'p':
         set_input_value(PERIPHERALS, optarg);
+        break;
+      case 's':
+        g_filename_image_out = optarg;
         break;
       case 't':
         ip_read(g_ip_data, optarg);
@@ -242,7 +241,7 @@ main(int argc, char *argv[])
 	break;
       case '?':
         if (is_in_char_array(optopt, g_parameterized_options)) {
-	  halt("option \"-%c\" requires an argument\n", optopt);
+          halt("option \"-%c\" requires an argument\n", optopt);
         } else if (isprint(optopt)) {
           halt("unknown option \"-%c\"\n", optopt);
         } else {
@@ -251,40 +250,70 @@ main(int argc, char *argv[])
       default:
         abort();
     }
-  }
+  }  
 
   // get extra arguments which are not parsed
-  parse_real_args(argc, argv);
-
-  // assign field values from the ip template file
-  // use an 'IP.TXT' file for input
-  if (g_filename_in != NULL) {
-    field_load(g_filename_in);
+  parse_real_args(argc, argv);  
+  
+  // check if we just want to export the logo
+  export_logo_only = !g_real_argc && g_filename_image_in != NULL &&
+    g_filename_image_out != NULL;
+  
+  // we don't know how to deal with that  
+  if (g_real_argc > 2) {
+    halt("too many arguments\n");
   }
-
-  // assign field values from the command-line options
-  for (int i = 0; i < NUM_FIELDS; i++) {
-    if (g_field_inputs[i] != NULL) {
-      field_set_value(i, g_field_inputs[i]);
+  
+  // no arguments was passed... but if we just want to export the logo, it's ok  
+  if (g_real_argc < 1 && !export_logo_only) {    
+    halt("too few arguments\n");
+  }
+  
+  if (!export_logo_only) {
+  
+    // assign field values from the ip template file
+    // use an 'IP.TXT' file for input
+    if (g_filename_in != NULL) {
+      field_load(g_filename_in);
     }
+
+    // assign field values from the command-line options
+    for (int i = 0; i < NUM_FIELDS; i++) {
+      if (g_field_inputs[i] != NULL) {
+        field_set_value(i, g_field_inputs[i]);
+      }
+    }
+
+    // stop if an error was detected when setting a field value
+    if (field_erroneous()) {
+      halt("field error; fix incorrect value(s) and try again\n");
+    }
+
+    // write data to the ip data
+    field_write(g_ip_data);
+
+    // check if the output IP.BIN is writable
+    if (!overwrite && is_file_exist(g_filename_out)) {
+      halt("output bootstrap file \"%s\" already exist\n", g_filename_out);
+    }
+
+    // writing the file onto disk
+    log_notice("writing bootstrap to \"%s\"\n", g_filename_out);
+    ip_write(g_ip_data, g_filename_out, g_filename_image_in, g_filename_image_out);
+
+    log_notice("bootstrap successfully written to \"%s\"\n", g_filename_out);
+	
+  } else {
+    log_notice("entering in MR image conversion only mode\n");
+	
+    // check if the output MR logo is writable
+    if (!overwrite && is_file_exist(g_filename_image_out)) {
+      halt("output MR file \"%s\" already exist\n", g_filename_image_out);
+    }
+	
+    // convert the input image to output MR file	
+	mr_export(g_filename_image_in, g_filename_image_out);
   }
-
-  // stop if an error was detected when setting a field value
-  if (field_erroneous()) {
-    halt("field error; fix incorrect value(s) and try again\n");
-  }
-
-  // write data to the ip data
-  field_write(g_ip_data);
-
-  // check if the output IP.BIN is writable
-  if (!overwrite && is_file_exist(g_filename_out)) {
-    halt("output bootstrap file \"%s\" already exist\n", g_filename_out);
-  }
-
-  // writing the file onto disk
-  log_notice("writing bootstrap to \"%s\"\n", g_filename_out);
-  ip_write(g_ip_data, g_filename_mr, g_filename_out);
 
   return EXIT_SUCCESS;
 }

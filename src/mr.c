@@ -33,6 +33,11 @@
 
 #include "mr.h"
 
+#define MR_MAX_SIZE 8192
+#define MR_MAX_PALETTE_COLORS 128
+
+#define MR_OFFSET 0x3820
+
 typedef struct image_t {
   unsigned int size;
   unsigned int width;
@@ -47,7 +52,7 @@ typedef struct color_t {
 } color_t;
 
 typedef struct palette_t {
-  color_t color[128];
+  color_t color[MR_MAX_PALETTE_COLORS];
   int count;
 } palette_t;
 
@@ -64,6 +69,12 @@ typedef struct mr_output_t {
   unsigned int size;
   unsigned char *data;
 } mr_output_t;
+
+char *
+mr_get_friendly_supported_format(void) 
+{
+  return MR_FRIENDLY_SUPPORTED_FORMAT;
+}
 
 int
 mr_compress(char *in, char *out, int size)
@@ -111,16 +122,18 @@ mr_convert_raw(image_t *image, mr_output_t *output)
   char *raw_output;
   char *compressed_output;
   int crap = 0;
-  int compressed_size;
+  int compressed_size, uncompressed_size;
 
   palette.count = 0;
 
+  uncompressed_size = image->width * image->height;
+
   data = (int *)image->data;
 
-  raw_output = (char *)malloc(image->width * image->height);
-  compressed_output = (char *)malloc(image->width * image->height);
+  raw_output = (char *)malloc(uncompressed_size);
+  compressed_output = (char *)malloc(uncompressed_size);
 
-  for(i = 0; i < image->width * image->height; i++) {
+  for(i = 0; i < uncompressed_size; i++) {
     int found = 0;
     int c = 0;
 
@@ -130,55 +143,58 @@ mr_convert_raw(image_t *image, mr_output_t *output)
       } else {
         c++;
       }
-   }
+    }
 
-   if ((!found) && (c == 128)) {
-     log_error("Reduce the number of colors to <= 128 and try again\n");
-       return 0;
-     }
+    if ((!found) && (c == MR_MAX_PALETTE_COLORS)) {
+      log_error("reduce the number of colors to <= %d and try again\n", MR_MAX_PALETTE_COLORS);
+      return 0;
+	}
 
-     if (!found) {
-       memcpy(&palette.color[c], &data[i], 3);
-       palette.count++;
-     }
+    if (!found) {
+      memcpy(&palette.color[c], &data[i], 3);
+      palette.count++;
+    }
 
-     raw_output[i] = c;
-   }
-
-   log_notice("found %d colors\n", palette.count);
-
-   mr.width = image->width;
-   mr.height = image->height;
-   mr.colors = palette.count;
-
-   compressed_size = mr_compress(raw_output, compressed_output, image->width * image->height);
-
-   log_notice("compressed %d bytes to %d bytes\n", image->width * image->height, compressed_size);
-
-   mr.offset = 2 + 7 * 4 + palette.count * 4;
-   mr.size = 2 + 7 * 4 + palette.count * 4 + compressed_size;
-
-   size_t p = 0;
-
-   output->size = mr.size;
-   output->data = (unsigned char *) malloc(mr.size);
-
-   bwrite(&p, output->data, "MR", 2);
-   bwrite(&p, output->data, &mr.size, 4);
-   bwrite(&p, output->data, &crap, 4);
-   bwrite(&p, output->data, &mr.offset, 4);
-   bwrite(&p, output->data, &mr.width, 4);
-   bwrite(&p, output->data, &mr.height, 4);
-   bwrite(&p, output->data, &crap, 4);
-   bwrite(&p, output->data, &mr.colors, 4);
-
-   for(i = 0; i < palette.count; i++) {
-     bwrite(&p, output->data, &palette.color[i].b, 1);
-     bwrite(&p, output->data, &palette.color[i].g, 1);
-     bwrite(&p, output->data, &palette.color[i].r, 1);
-     bwrite(&p, output->data, &crap, 1);
+    raw_output[i] = c;
   }
 
+  log_notice("found %d colors\n", palette.count);
+
+  mr.width = image->width;
+  mr.height = image->height;
+  mr.colors = palette.count;
+
+  compressed_size = mr_compress(raw_output, compressed_output, uncompressed_size);
+
+  log_notice("compressed %d bytes to %d bytes\n", uncompressed_size, compressed_size);
+
+  mr.offset = 2 + 7 * 4 + palette.count * 4;
+  mr.size = mr.offset + compressed_size;
+
+  size_t p = 0;
+
+  output->size = mr.size;
+  output->data = (unsigned char *) malloc(mr.size);
+
+  // writing MR header
+  bwrite(&p, output->data, "MR", 2);
+  bwrite(&p, output->data, &mr.size, 4);
+  bwrite(&p, output->data, &crap, 4);
+  bwrite(&p, output->data, &mr.offset, 4);
+  bwrite(&p, output->data, &mr.width, 4);
+  bwrite(&p, output->data, &mr.height, 4);
+  bwrite(&p, output->data, &crap, 4);
+  bwrite(&p, output->data, &mr.colors, 4);
+
+  // writing MR palette colors data
+  for(i = 0; i < palette.count; i++) {
+    bwrite(&p, output->data, &palette.color[i].b, 1);
+    bwrite(&p, output->data, &palette.color[i].g, 1);
+    bwrite(&p, output->data, &palette.color[i].r, 1);
+    bwrite(&p, output->data, &crap, 1);
+  }
+
+  // writing MR data
   bwrite(&p, output->data, compressed_output, compressed_size);
 
   free(raw_output);
@@ -191,6 +207,7 @@ int
 mr_read(char *file_name, mr_output_t *output)
 {
   FILE *mr = fopen(file_name, "rb");
+
   if (mr == NULL) {
     log_error("can't open MR file \"%s\"\n", file_name);
     return 0;
@@ -206,9 +223,9 @@ mr_read(char *file_name, mr_output_t *output)
     log_error("MR file is empty\n");
     result = 0;
   } else {
-    log_notice("loading MR file (\"%s\", %d bytes)\n", file_name, output->size);
+    log_notice("loading raw MR file \"%s\" for %d bytes\n", file_name, output->size);
 
-    output->data = (unsigned char *) malloc (output->size);
+    output->data = (unsigned char *) malloc(output->size);
 	if (!fread(output->data, output->size, 1, mr)) {
       log_error("unable to read MR file\n");
       result = 0;
@@ -314,57 +331,107 @@ png_read(char *file_name, mr_output_t *output)
 
    fclose(fp);
 
-   mr_convert_raw(&pngimg, output);
+   int result = mr_convert_raw(&pngimg, output);
 
    free(pngimg.data);
 
-   return 1;
+   return result;
 }
 
-int
-mr_inject(char *ip, char *filename)
+void
+mr_destroy(mr_output_t *output)
 {
-  file_type_t ftype = detect_file_type(filename);
+  if (output->data) {
+    free(output->data);    
+  }
+  memset(&output, 0, sizeof(output));  
+}
 
-  int r = 0;
+void
+mr_dump(mr_output_t *output, char *outfn)
+{
+  FILE *mr = fopen(outfn, "wb");
 
-  mr_output_t output;
-  memset(&output, 0, sizeof(output));
+  if (mr == NULL) {
+    log_error("can't open MR file \"%s\"\n", outfn);
+    return;
+  }
+     
+  if (!fwrite(output->data, output->size, 1, mr)) {
+    log_error("unable to write MR file\n");
+  } else {
+    log_notice("successfully dumped MR data to \"%s\"\n", outfn);
+  }
+  
+  fclose(mr);
+}
+
+void
+mr_load(char *fn_imgin, mr_output_t *output)
+{
+  file_type_t ftype = detect_file_type(fn_imgin);
+
+  int result = 0;
+  
+  mr_destroy(output);
 
   switch(ftype) {
     case MR:
-	  r = mr_read(filename, &output);
+      log_notice("file \"%s\" format is MR\n", fn_imgin);
+	  result = mr_read(fn_imgin, output);
       break;
     case PNG:
-	  r = png_read(filename, &output);
+      log_notice("file \"%s\" is Portable Network Graphics (PNG)\n", fn_imgin);	
+	  result = png_read(fn_imgin, output);
       break;
     case UNSUPPORTED:
-      log_error("unsupported file format\n");
-      return 0;
+      halt("unsupported file format\n");      
       break;
     case INVALID:
-      return 0;
+      halt("invalid file\n");
   }
 
-  if (r) {
-    log_notice("loaded %s, %d\n", filename, output.size);
+  if (result) {
+    log_notice("successfully loaded logo from \"%s\"\n", fn_imgin);
+    log_notice("MR total size is %d bytes\n", output->size);
   } else {
-    log_error("unable to read %s\n", filename);
-    return 0;
+    halt("unable to process logo from \"%s\"\n", fn_imgin);    
   }
 
-  if (output.size < 1) {
-    log_error("empty file\n");
-    return 0;
+  if (output->size < 1) {
+    halt("empty logo file\n");    
   }
 
-  if (output.size > 8192) {
-    log_warn("MR data is larger than 8192 bytes and may corrupt bootstrap\n");
+  if (output->size > MR_MAX_SIZE) {
+    log_warn("MR data is larger than %d bytes and may corrupt bootstrap\n", MR_MAX_SIZE);
+  }  
+}
+
+void
+mr_export(char *fn_imgin, char *fn_imgout)
+{
+  mr_output_t output;
+  
+  mr_load(fn_imgin, &output);
+  mr_dump(&output, fn_imgout);
+  
+  mr_destroy(&output);
+}
+
+void
+mr_inject(char *ip, char *fn_imgin, char *fn_imgout)
+{
+  mr_output_t output;
+  
+  mr_load(fn_imgin, &output);
+
+  memcpy(ip + MR_OFFSET, output.data, output.size);
+
+  log_notice("successfully inserted logo in bootstrap\n");
+  
+  if (fn_imgout != NULL) {
+    mr_dump(&output, fn_imgout);
   }
-
-  memcpy(ip + 0x3820, output.data, output.size);
-
-  free(output.data);
-
-  return 1;
+  
+  mr_destroy(&output);
 }

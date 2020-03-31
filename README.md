@@ -2,42 +2,60 @@
 
 **IP creator** (`makeip`) is an utility used for generating homebrew **Sega
 Dreamcast** bootstrap files, also known as `IP` which stands for **Initial
-Program**. This file is often known as the `IP.BIN` file.
+Program**. This file is often named `IP.BIN`. It's a critical component for
+any Dreamcast discs.
 
 `IP.BIN` file is used for making selfboot (**MIL-CD**) discs for **Sega
-Dreamcast** softwares. When inserted in the bootsector of a disc, the bootstrap
-program (`IP.BIN`) executes the real Dreamcast program stored on the disc which
-is often called `1ST_READ.BIN`. The `IP.BIN` file is not needed on the
-filesystem.
+Dreamcast** softwares. When the file is inserted in the bootsector of a disc,
+the bootstrap program (`IP.BIN`) will execute the main program stored on the
+file system which is often named `1ST_READ.BIN`. Please note, the `IP.BIN`
+file is not needed on the file system as it's inserted in the bootsector.
 
 **IP creator** will generates a custom `IP.BIN` file designed for homebrew
-programs. It uses minimal copyrighted code from Sega, i.e. the minimum that
-can't be removed.
+programs. It uses minimal copyrighted code, i.e. the minimum code that
+can't be removed/altered in any way.
 
-All `IP.BIN` files contains custom fields used to describe some properties of
-the software present on the disc. **IP creator** will allow you to fill these
-fields. It also supports the insertion of custom images in the boot screen.
-These kind of images are called **MR images** or **MR logos** and are often
-stored in files with the `.mr` extension.
+All `IP.BIN` files contains custom data fields used to describe some properties
+of the software present on the disc. **IP creator** will allow you to edit
+these fields. It also supports the insertion of custom images in the boot
+screen. These kind of images are called **MR images** or **MR logos** and are
+often stored in files with the `.mr` extension. You'll be able to convert
+a **PNG** image into the **MR** format on-the-fly with **IP creator**.
 
-Below an example of the *ADK/Napalm* MR image shown in the boot screen
-(extracted from `dcload` bootstrap):
+Below you'll find an example of the *ADK/Napalm* MR image shown in the boot
+screen (this **MR** logo was extracted from the `dcload` bootstrap):
 
 ![Example](img/mrlogo.png "Sample MR image")
 
 ## Building
 
 This program is a standard C program which may be compiled with **GNU Make**.
+It requires `libpng-dev` installed.
+[Learn more about libpng here](http://www.libpng.org/pub/png/libpng.html).
 
-1. Edit the `Makefile` and check if everything is OK for you.
-2. After that enter `make`.
+1. Edit the `Makefile` and check if everything is OK for you (e.g. `libpng`
+   directories);
+2. Enter `make`.
 
 ## Usage
 
-To use this tool, two modes are available:
+To use this tool, several modes are available:
 
 1. Using a IP template file (`ip.txt`);
 2. Using command-line arguments.
+
+Available options are (displayed with the `-h` switch):
+	
+	-f                 Force overwrite output file if already exist
+	-h                 Print usage information (you're looking at it)
+	-l <infilename>    Load/insert an image into bootstrap (MR; PNG)
+	-t <tmplfilename>  Use an external IP.TMPL file (override default)
+	-u                 Print field usage information
+	-s <outfilename>   Save image from <infilename> to MR format (see '-l')
+	-v                 Enable verbose mode
+
+To learn more about **MR images**, please read below. You may use either a
+raw `MR` image or a `PNG` image that will be converted on-the-fly.
 
 ### Using a IP template file
 
@@ -59,7 +77,7 @@ Then run the following command:
 
 	makeip ip.txt IP.BIN
 
-This will generate the `IP.BIN` with the fields above.
+This will generate the `IP.BIN` with the above values.
 
 You don't have to fill all the fields, removing them from the `ip.txt` will use
 the default. So a minimal `ip.txt` file may be like:
@@ -73,7 +91,7 @@ the default. So a minimal `ip.txt` file may be like:
 ID** and **Maker ID** declared. They can't be altered so it isn't necessary
 anymore to pass them. Plus, the **Device Info** field may contains a fake
 **CRC** like `0000` (see below in the **Device Info** field sub-section for
-more info), this isn't necessary but it will still work. 
+more info), this isn't necessary now but it will still work if present. 
 
 ###  Using command-line arguments
 
@@ -83,29 +101,66 @@ switch. To print this list, use the `-u` switch instead of `-h`.
 	-a <areasymbols>    Area sym (J)apan, (U)SA, (E)urope (default: JUE)
 	-b <bootfilename>   Boot filename (default: 1ST_READ.BIN)
 	-c <companyname>    Company name / SW maker name (default: KallistiOS)
-	-d <releasedate>    Release date (format: YYYYMMDD, default: 20200329)
+	-d <releasedate>    Release date (format: YYYYMMDD, default: <today>)
 	-e <version>        Product version (default: V1.000)
 	-g <gametitle>      Title of the software (default: GAMETITLE)
 	-i <deviceinfo>     Device info (format: CD-ROMx/y, default: CD-ROM1/1)
 	-n <productno>      Product number (default: T-00000)
 	-p <peripherals>    Peripherals (default: E000F10)
 
-### About options
+## MR Images
 
-Additional available options are (displayed with the `-h` switch):
-	
-	-f                  Force overwrite <IP.BIN> output file if exist
-	-h                  Print usage information (you're looking at it)
-	-l <mrfilename>     Insert a MR image into the IP.BIN
-	-t <tmplfilename>   Use an external IP.TMPL file (override default)
-	-u                  Print field usage information
-	-v                  Enable verbose mode
+**MR Image** is a special image format that can be inserted in the boostrap.
+This kind of image are often saved as `iplogo.mr` or equivalent.
 
-To learn more about **MR images**, please read below.
+With **IP creator** you will be able to:
 
-## Information about specific fields
+* Insert a custom image in the generated bootstrap. It can be either raw
+  **MR** format or **PNG** format;
+* Convert an input file (i.e. a **PNG** file) into the **MR** format and
+  save the result on the disk for later use.
 
-Some fields used in the bootstrap need to be detailed:
+### Inserting an image into bootstrap
+
+Just pass the `-l` switch to the command-line:
+
+	makeip -l iplogo.mr -v IP.BIN
+
+You may pass a **PNG** file too:
+
+	makeip -l iplogo.png -v IP.BIN
+
+In that case, the **PNG** file will be converted on-the-fly in the **MR**
+format before inserting in the bootstrap.
+
+### About MR Image constraints
+
+To be used in the generated `IP.BIN` file, the **MR image** must be:
+
+1. **320 * 90** or less;
+2. Less than **128** colors;
+3. Less than **8192 Bytes**.
+
+The transparent color is `#c0c0c0`, or `192`, `192`, `192` in RGB.
+
+### Converting a PNG Image into a MR Image
+
+If you just want to convert a **PNG** Image to a **MR** Image but not
+generating the bootstrap, you may use **IP creator** like:
+
+	makeip -l iplogo.png -s iplogo.mr -v
+
+This will try to convert the `iplogo.png` to the `iplogo.mr` file.
+
+Of course, you may generate a bootstrap and write the converted image
+on the disk at the same time:
+
+	makeip -l iplogo.png -s iplogo.mr -v IP.BIN
+
+## Information about some specific fields
+
+Some fields used in the bootstrap need to be detailed, as they are have
+constraints:
 
 * Area Symbols
 * Device Information
@@ -220,20 +275,11 @@ To install the GIMP Plug-In:
 1. Make the plug-in executable: ```chmod +x file-mr.py``` or equivalent.
 2. Place the plug-in in the `plugins` directory. This directory is different
    depending on what operating system you use. To find out go to `GIMP` >
-   `Preferences` > `Folders` (*Expand option*) > `Plugins` (see below).
+   `Preferences` > `Folders` (*Expand option*) > `Plugins` (see below an
+   example under **Windows**, but this applies to others OS).
 3. That's it!
 
 ![GIMP Plug-In Directory](img/gimp.png "GIMP Plug-In Directory")
-
-## About MR Images
-
-To be used in the generated `IP.BIN` file, the **MR image** should be:
-
-1. **320 * 90** or less;
-2. Less than **128** colors;
-3. Less than **8192 Bytes**.
-
-The transparent color is `#c0c0c0`, or `192`, `192`, `192` in RGB.
 
 ## Acknowledgments
 
@@ -245,7 +291,7 @@ The transparent color is `#c0c0c0`, or `192`, `192`, `192` in RGB.
   [IP creator](http://mc.pp.se/dc/sw.html) tool (`makeip`).
 * [Andrew Kieschnick](http://napalm-x.thegypsy.com/andrewk/dc/) (ADK/Napalm):
   Code to insert `MR` images into `IP.BIN` and `PNG` to `MR` from
-  [logotools](http://napalm-x.thegypsy.com/andrewk/dc/) (`logoinsert.c`).
+  [logotools](http://napalm-x.thegypsy.com/andrewk/dc/).
 * [Hayden Kowalchuk](https://twitter.com/HaydenKowalchuk)
   ([mrneo240](https://github.com/mrneo240)): Fixes on the original `logotools`
   package.
