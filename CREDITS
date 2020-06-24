@@ -1,0 +1,11 @@
+IP creator (makeip): Credits
+
+- Jacob Alberty (LiENUS): Copyright-free bootstrap replacement (IP.TMPL).
+- Marcus Comstedt (zeldin): Initial release of the IP creator (makeip).
+- Andrew Kieschnick (ADK/Napalm): Code to insert MR images into IP.BIN and PNG
+  to MR from logotools.
+- Hayden Kowalchuk (mrneo240): Fixes on the original logotools package.   
+- Andress Antonio Barajas (BBHoodsta): Tons of fixes and improvements. Maker of 
+  the GIMP MR Image Plug-In.
+- SiZiOUS: Complete refactoring of the project and provider of the snippet for
+  decoding MR images (extracted from Selfboot Inducer).
